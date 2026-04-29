@@ -1,0 +1,25 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_batpack": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "ic2:batpack"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_batpack"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2:advanced_batpack"
+    ]
+  }
+}

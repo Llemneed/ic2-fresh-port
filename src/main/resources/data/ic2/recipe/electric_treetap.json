@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "TR ",
+    "TB ",
+    "R  "
+  ],
+  "key": {
+    "T": {
+      "item": "ic2:treetap"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "B": {
+      "item": "ic2:re_battery"
+    }
+  },
+  "result": {
+    "id": "ic2:electric_treetap",
+    "count": 1
+  }
+}

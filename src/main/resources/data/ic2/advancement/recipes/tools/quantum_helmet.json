@@ -1,0 +1,25 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_nano_helmet": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "ic2:nano_helmet"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_nano_helmet"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2:quantum_helmet"
+    ]
+  }
+}

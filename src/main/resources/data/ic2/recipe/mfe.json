@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "ECE",
+    "AMA",
+    "ECE"
+  ],
+  "key": {
+    "E": {
+      "item": "ic2:energy_crystal"
+    },
+    "C": {
+      "item": "ic2:advanced_circuit"
+    },
+    "A": {
+      "item": "ic2:advanced_machine"
+    },
+    "M": {
+      "item": "ic2:cesu"
+    }
+  },
+  "result": {
+    "id": "ic2:mfe",
+    "count": 1
+  }
+}

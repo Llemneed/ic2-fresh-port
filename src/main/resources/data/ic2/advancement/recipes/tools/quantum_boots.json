@@ -1,0 +1,25 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_nano_boots": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "ic2:nano_boots"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_nano_boots"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2:quantum_boots"
+    ]
+  }
+}

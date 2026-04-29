@@ -1,0 +1,25 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_advanced_machine": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "item": "ic2:advanced_machine"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_advanced_machine"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2:metal_former"
+    ]
+  }
+}

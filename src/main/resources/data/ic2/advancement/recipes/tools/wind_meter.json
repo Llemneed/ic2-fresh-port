@@ -1,0 +1,25 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_feather": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:feather"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_feather"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2:wind_meter"
+    ]
+  }
+}

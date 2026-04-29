@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "B B",
+    "ACA",
+    " B "
+  ],
+  "key": {
+    "B": {
+      "item": "ic2:advanced_re_battery"
+    },
+    "A": {
+      "item": "ic2:alloy"
+    },
+    "C": {
+      "item": "ic2:batpack"
+    }
+  },
+  "result": {
+    "id": "ic2:advanced_batpack",
+    "count": 1
+  }
+}

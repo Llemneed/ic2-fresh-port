@@ -1,0 +1,25 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_drill": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "ic2:drill"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_drill"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2:diamond_drill"
+    ]
+  }
+}

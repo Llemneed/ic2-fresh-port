@@ -1,0 +1,38 @@
+{
+  "textures": {
+    "particle": "ic2:block/resource/rubber_wood_dry_leftrightback",
+    "down": "ic2:block/resource/rubber_wood_dry_bottomtop",
+    "up": "ic2:block/resource/rubber_wood_dry_bottomtop",
+    "north": "ic2:block/resource/rubber_wood_dry_front",
+    "east": "ic2:block/resource/rubber_wood_dry_leftrightback",
+    "south": "ic2:block/resource/rubber_wood_dry_leftrightback",
+    "west": "ic2:block/resource/rubber_wood_dry_leftrightback",
+    "resin": "ic2:block/resin_sheet"
+  },
+  "elements": [
+    {
+      "from": [0, 0, 0],
+      "to": [16, 16, 16],
+      "faces": {
+        "down": { "texture": "#down", "cullface": "down" },
+        "up": { "texture": "#up", "cullface": "up" },
+        "north": { "texture": "#north", "cullface": "north" },
+        "south": { "texture": "#south", "cullface": "south" },
+        "west": { "texture": "#west", "cullface": "west" },
+        "east": { "texture": "#east", "cullface": "east" }
+      }
+    },
+    {
+      "from": [6, 4, 14.5],
+      "to": [10, 12, 16],
+      "faces": {
+        "north": { "texture": "#resin" },
+        "south": { "texture": "#resin" },
+        "west": { "texture": "#resin" },
+        "east": { "texture": "#resin" },
+        "up": { "texture": "#resin" },
+        "down": { "texture": "#resin" }
+      }
+    }
+  ]
+}

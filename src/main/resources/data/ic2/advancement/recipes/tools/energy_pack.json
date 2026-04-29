@@ -1,0 +1,25 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_lappack": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "ic2:lappack"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_lappack"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2:energy_pack"
+    ]
+  }
+}

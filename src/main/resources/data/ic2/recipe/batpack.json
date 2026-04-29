@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "B B",
+    "BBB",
+    " T "
+  ],
+  "key": {
+    "B": {
+      "item": "ic2:re_battery"
+    },
+    "T": {
+      "item": "ic2:tin_ingot"
+    }
+  },
+  "result": {
+    "id": "ic2:batpack",
+    "count": 1
+  }
+}

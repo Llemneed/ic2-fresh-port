@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " T ",
+    " T ",
+    "CMC"
+  ],
+  "key": {
+    "T": {
+      "item": "ic2:tin_can"
+    },
+    "C": {
+      "item": "minecraft:redstone"
+    },
+    "M": {
+      "item": "ic2:machine_casing"
+    }
+  },
+  "result": {
+    "id": "ic2:solid_canner",
+    "count": 1
+  }
+}

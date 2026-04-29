@@ -1,0 +1,25 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_nano_leggings": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "ic2:nano_leggings"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_nano_leggings"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2:quantum_leggings"
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "AAA",
+    "AMA",
+    "AAA"
+  ],
+  "key": {
+    "A": {
+      "item": "ic2:alloy"
+    },
+    "M": {
+      "item": "ic2:machine_casing"
+    }
+  },
+  "result": {
+    "id": "ic2:advanced_machine",
+    "count": 1
+  }
+}

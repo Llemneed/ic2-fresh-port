@@ -1,0 +1,25 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_machine_casing": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "item": "ic2:machine_casing"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_machine_casing"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2:advanced_machine"
+    ]
+  }
+}

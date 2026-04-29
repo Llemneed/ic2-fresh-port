@@ -1,0 +1,25 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_treetap": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "ic2:treetap"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_treetap"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2:electric_treetap"
+    ]
+  }
+}

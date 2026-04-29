@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "WWW",
+    "BCB",
+    "B B"
+  ],
+  "key": {
+    "W": {
+      "tag": "minecraft:planks"
+    },
+    "B": {
+      "item": "ic2:re_battery"
+    },
+    "C": {
+      "item": "minecraft:chest"
+    }
+  },
+  "result": {
+    "id": "ic2:batbox",
+    "count": 1
+  }
+}

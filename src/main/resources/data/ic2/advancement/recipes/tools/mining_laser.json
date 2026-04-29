@@ -1,0 +1,25 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_re_battery": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "ic2:re_battery"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_re_battery"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2:mining_laser"
+    ]
+  }
+}

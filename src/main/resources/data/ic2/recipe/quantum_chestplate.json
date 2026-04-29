@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "G G",
+    "GNG",
+    "GBG"
+  ],
+  "key": {
+    "G": {
+      "item": "minecraft:gold_ingot"
+    },
+    "N": {
+      "item": "ic2:nano_chestplate"
+    },
+    "B": {
+      "item": "ic2:energy_pack"
+    }
+  },
+  "result": {
+    "id": "ic2:quantum_chestplate",
+    "count": 1
+  }
+}

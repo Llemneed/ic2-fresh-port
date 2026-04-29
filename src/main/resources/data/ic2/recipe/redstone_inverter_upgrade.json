@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "T T",
+    " L ",
+    "T T"
+  ],
+  "key": {
+    "T": {
+      "item": "ic2:tin_ingot"
+    },
+    "L": {
+      "item": "minecraft:lever"
+    }
+  },
+  "result": {
+    "id": "ic2:redstone_inverter_upgrade",
+    "count": 1
+  }
+}

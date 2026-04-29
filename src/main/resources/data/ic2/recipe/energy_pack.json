@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "E E",
+    "ACA",
+    " E "
+  ],
+  "key": {
+    "E": {
+      "item": "ic2:energy_crystal"
+    },
+    "A": {
+      "item": "ic2:advanced_circuit"
+    },
+    "C": {
+      "item": "ic2:lappack"
+    }
+  },
+  "result": {
+    "id": "ic2:energy_pack",
+    "count": 1
+  }
+}

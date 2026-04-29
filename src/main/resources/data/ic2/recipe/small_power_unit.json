@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " AC",
+    "BIM",
+    " AC"
+  ],
+  "key": {
+    "A": {
+      "item": "minecraft:copper_ingot"
+    },
+    "C": {
+      "item": "minecraft:iron_ingot"
+    },
+    "B": {
+      "item": "ic2:re_battery"
+    },
+    "I": {
+      "item": "ic2:circuit"
+    },
+    "M": {
+      "item": "ic2:electric_motor"
+    }
+  },
+  "result": {
+    "id": "ic2:small_power_unit",
+    "count": 1
+  }
+}
