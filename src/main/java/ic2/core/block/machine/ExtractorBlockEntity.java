@@ -4,10 +4,12 @@ import ic2.core.energy.EnergyConsumer;
 import ic2.core.init.IC2BlockEntities;
 import ic2.core.init.IC2Blocks;
 import ic2.core.init.IC2Items;
+import ic2.core.init.IC2Sounds;
 import ic2.core.item.electric.ElectricItemManager;
 import ic2.core.item.upgrade.MachineUpgradeItem;
 import ic2.core.item.upgrade.MachineUpgradeItem.UpgradeType;
 import ic2.core.menu.ExtractorMenu;
+import ic2.core.sound.MachineSoundHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -100,6 +102,7 @@ public final class ExtractorBlockEntity extends BlockEntity implements MenuProvi
         if (canProcess) {
             blockEntity.energyStored -= energyPerTick;
             blockEntity.progress++;
+            MachineSoundHelper.playLoop(level, pos, IC2Sounds.EXTRACTOR_OPERATING.get());
 
             if (blockEntity.progress >= maxProgress) {
                 blockEntity.progress = 0;

@@ -55,6 +55,14 @@ public final class IC2Items {
     public static final DeferredItem<BlockItem> CHARGEPAD_CESU = ITEMS.registerSimpleBlockItem(IC2Blocks.CHARGEPAD_CESU);
     public static final DeferredItem<BlockItem> CHARGEPAD_MFE = ITEMS.registerSimpleBlockItem(IC2Blocks.CHARGEPAD_MFE);
     public static final DeferredItem<BlockItem> CHARGEPAD_MFSU = ITEMS.registerSimpleBlockItem(IC2Blocks.CHARGEPAD_MFSU);
+    public static final DeferredItem<BlockItem> TIN_CABLE = ITEMS.registerSimpleBlockItem(IC2Blocks.TIN_CABLE);
+    public static final DeferredItem<BlockItem> COPPER_CABLE = ITEMS.registerSimpleBlockItem(IC2Blocks.COPPER_CABLE);
+    public static final DeferredItem<BlockItem> GOLD_CABLE = ITEMS.registerSimpleBlockItem(IC2Blocks.GOLD_CABLE);
+    public static final DeferredItem<BlockItem> GLASS_FIBRE_CABLE = ITEMS.registerSimpleBlockItem(IC2Blocks.GLASS_FIBRE_CABLE);
+    public static final DeferredItem<BlockItem> LV_TRANSFORMER = ITEMS.registerSimpleBlockItem(IC2Blocks.LV_TRANSFORMER);
+    public static final DeferredItem<BlockItem> MV_TRANSFORMER = ITEMS.registerSimpleBlockItem(IC2Blocks.MV_TRANSFORMER);
+    public static final DeferredItem<BlockItem> HV_TRANSFORMER = ITEMS.registerSimpleBlockItem(IC2Blocks.HV_TRANSFORMER);
+    public static final DeferredItem<BlockItem> EV_TRANSFORMER = ITEMS.registerSimpleBlockItem(IC2Blocks.EV_TRANSFORMER);
     public static final DeferredItem<BlockItem> RUBBER_WOOD = ITEMS.registerSimpleBlockItem(IC2Blocks.RUBBER_WOOD);
     public static final DeferredItem<BlockItem> RUBBER_LEAVES = ITEMS.registerSimpleBlockItem(IC2Blocks.RUBBER_LEAVES);
     public static final DeferredItem<BlockItem> RUBBER_SAPLING = ITEMS.registerSimpleBlockItem(IC2Blocks.RUBBER_SAPLING);

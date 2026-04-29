@@ -19,6 +19,14 @@ public final class ElectricItemManager {
         return stack.getItem() instanceof ElectricItem electricItem && electricItem.canProvideEnergy();
     }
 
+    public static boolean canAcceptEnergy(ItemStack stack) {
+        return isElectricItem(stack) && getCharge(stack) < getMaxCharge(stack);
+    }
+
+    public static boolean hasEnergy(ItemStack stack) {
+        return isElectricItem(stack) && getCharge(stack) > 0;
+    }
+
     public static int getCharge(ItemStack stack) {
         if (!(stack.getItem() instanceof ElectricItem)) {
             return 0;
@@ -76,6 +84,24 @@ public final class ElectricItemManager {
 
         setCharge(stack, stored - extracted);
         return extracted;
+    }
+
+    public static int transfer(ItemStack source, ItemStack target, int amount, boolean requireProvider) {
+        if (amount <= 0 || source.isEmpty() || target.isEmpty() || source == target || !isElectricItem(target)) {
+            return 0;
+        }
+
+        int extracted = discharge(source, amount, requireProvider);
+        if (extracted <= 0) {
+            return 0;
+        }
+
+        int accepted = charge(target, extracted);
+        if (accepted < extracted) {
+            charge(source, extracted - accepted);
+        }
+
+        return accepted;
     }
 
     public static void setCharge(ItemStack stack, int charge) {

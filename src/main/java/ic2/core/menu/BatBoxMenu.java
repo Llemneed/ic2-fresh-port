@@ -14,6 +14,7 @@ import net.neoforged.neoforge.items.SlotItemHandler;
 public final class BatBoxMenu extends AbstractContainerMenu {
     private final BaseEnergyStorageBlockEntity blockEntity;
     private final ContainerData data;
+    private final Inventory playerInventory;
 
     public BatBoxMenu(int containerId, Inventory playerInventory, FriendlyByteBuf buffer) {
         this(containerId, playerInventory, (BaseEnergyStorageBlockEntity) playerInventory.player.level().getBlockEntity(buffer.readBlockPos()), null);
@@ -21,6 +22,7 @@ public final class BatBoxMenu extends AbstractContainerMenu {
 
     public BatBoxMenu(int containerId, Inventory playerInventory, BaseEnergyStorageBlockEntity blockEntity, ContainerData data) {
         super(IC2Menus.BATBOX.get(), containerId);
+        this.playerInventory = playerInventory;
         this.blockEntity = blockEntity;
         this.data = data != null ? data : blockEntity.getData();
 
@@ -102,6 +104,14 @@ public final class BatBoxMenu extends AbstractContainerMenu {
 
         slot.onTake(player, stack);
         return copied;
+    }
+
+    @Override
+    public void broadcastChanges() {
+        super.broadcastChanges();
+        if (!playerInventory.player.level().isClientSide) {
+            blockEntity.chargePlayerInventory(playerInventory);
+        }
     }
 
     @Override

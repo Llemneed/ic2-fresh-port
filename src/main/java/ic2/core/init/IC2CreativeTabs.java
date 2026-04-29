@@ -42,6 +42,14 @@ public final class IC2CreativeTabs {
                         output.accept(IC2Blocks.CHARGEPAD_CESU);
                         output.accept(IC2Blocks.CHARGEPAD_MFE);
                         output.accept(IC2Blocks.CHARGEPAD_MFSU);
+                        output.accept(IC2Blocks.TIN_CABLE);
+                        output.accept(IC2Blocks.COPPER_CABLE);
+                        output.accept(IC2Blocks.GOLD_CABLE);
+                        output.accept(IC2Blocks.GLASS_FIBRE_CABLE);
+                        output.accept(IC2Blocks.LV_TRANSFORMER);
+                        output.accept(IC2Blocks.MV_TRANSFORMER);
+                        output.accept(IC2Blocks.HV_TRANSFORMER);
+                        output.accept(IC2Blocks.EV_TRANSFORMER);
                         output.accept(IC2Blocks.RUBBER_WOOD);
                         output.accept(IC2Blocks.RUBBER_LEAVES);
                         output.accept(IC2Blocks.RUBBER_SAPLING);

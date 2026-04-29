@@ -25,6 +25,14 @@
   "block.ic2.chargepad_cesu": "Chargepad CESU",
   "block.ic2.chargepad_mfe": "Chargepad MFE",
   "block.ic2.chargepad_mfsu": "Chargepad MFSU",
+  "block.ic2.tin_cable": "Tin Cable",
+  "block.ic2.copper_cable": "Copper Cable",
+  "block.ic2.gold_cable": "Gold Cable",
+  "block.ic2.glass_fibre_cable": "Glass Fibre Cable",
+  "block.ic2.lv_transformer": "LV Transformer",
+  "block.ic2.mv_transformer": "MV Transformer",
+  "block.ic2.hv_transformer": "HV Transformer",
+  "block.ic2.ev_transformer": "EV Transformer",
   "block.ic2.rubber_wood": "Rubber Wood",
   "block.ic2.rubber_leaves": "Rubber Leaves",
   "block.ic2.rubber_sapling": "Rubber Sapling",
@@ -109,5 +117,7 @@
   "tooltip.ic2.energy_storage_upgrade.1": "Expands a machine's internal energy buffer.",
   "tooltip.ic2.energy_storage_upgrade.2": "Each module adds extra stored energy capacity.",
   "tooltip.ic2.redstone_inverter_upgrade.1": "Inverts redstone control for a machine.",
-  "tooltip.ic2.redstone_inverter_upgrade.2": "Full control logic will expand with automation systems."
+  "tooltip.ic2.redstone_inverter_upgrade.2": "Full control logic will expand with automation systems.",
+  "message.ic2.transformer.step_up": "Transformer set to step-up mode",
+  "message.ic2.transformer.step_down": "Transformer set to step-down mode"
 }

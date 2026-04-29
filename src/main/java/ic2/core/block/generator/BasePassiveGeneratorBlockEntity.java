@@ -1,12 +1,14 @@
 package ic2.core.block.generator;
 
-import ic2.core.energy.EnergyConsumer;
+import ic2.core.energy.EnergyNetHelper;
 import ic2.core.energy.EnergyTier;
+import ic2.core.sound.MachineSoundHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -42,6 +44,10 @@ public abstract class BasePassiveGeneratorBlockEntity extends BlockEntity implem
         int generated = getGenerationPerTick();
         if (generated > 0) {
             energyStored = Math.min(maxEnergy, energyStored + generated);
+            SoundEvent sound = getOperatingSound();
+            if (sound != null) {
+                MachineSoundHelper.playLoop(level, pos, sound);
+            }
         }
 
         pushEnergy();
@@ -49,6 +55,10 @@ public abstract class BasePassiveGeneratorBlockEntity extends BlockEntity implem
     }
 
     protected abstract int getGenerationPerTick();
+
+    protected SoundEvent getOperatingSound() {
+        return null;
+    }
 
     private void pushEnergy() {
         if (level == null || energyStored <= 0) {
@@ -60,12 +70,9 @@ public abstract class BasePassiveGeneratorBlockEntity extends BlockEntity implem
                 return;
             }
 
-            BlockEntity blockEntity = level.getBlockEntity(worldPosition.relative(direction));
-            if (blockEntity instanceof EnergyConsumer consumer && consumer.canReceiveEnergy()) {
-                int packet = Math.min(outputPerTick, energyStored);
-                int sent = consumer.receiveEu(packet, sourceTier, false);
-                energyStored -= sent;
-            }
+            int packet = Math.min(outputPerTick, energyStored);
+            int sent = EnergyNetHelper.sendEnergy(level, worldPosition, direction, packet, sourceTier);
+            energyStored -= sent;
         }
     }
 

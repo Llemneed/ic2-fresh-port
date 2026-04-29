@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " C ",
+    "BMB",
+    " C "
+  ],
+  "key": {
+    "C": {
+      "item": "ic2:circuit"
+    },
+    "B": {
+      "item": "ic2:tin_cable"
+    },
+    "M": {
+      "item": "ic2:machine_casing"
+    }
+  },
+  "result": {
+    "id": "ic2:lv_transformer",
+    "count": 1
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "generator_operating": {
+    "sounds": [
+      "ic2:generators/generator_operating"
+    ]
+  },
+  "geothermal_operating": {
+    "sounds": [
+      "ic2:generators/geothermal_operating"
+    ]
+  },
+  "watermill_operating": {
+    "sounds": [
+      "ic2:generators/watermill_operating"
+    ]
+  },
+  "windmill_operating": {
+    "sounds": [
+      "ic2:generators/windmill_operating"
+    ]
+  },
+  "macerator_operating": {
+    "sounds": [
+      "ic2:machines/base/macerator_operating"
+    ]
+  },
+  "extractor_operating": {
+    "sounds": [
+      "ic2:machines/base/extractor_operating"
+    ]
+  },
+  "electric_furnace_operating": {
+    "sounds": [
+      "ic2:machines/base/electric_furnace_operating"
+    ]
+  },
+  "compressor_operating": {
+    "sounds": [
+      "ic2:machines/base/compressor_operating"
+    ]
+  },
+  "recycler_operating": {
+    "sounds": [
+      "ic2:machines/base/recycler_operating"
+    ]
+  }
+}

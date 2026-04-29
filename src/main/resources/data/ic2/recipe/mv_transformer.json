@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " A ",
+    "LML",
+    " A "
+  ],
+  "key": {
+    "A": {
+      "item": "ic2:advanced_circuit"
+    },
+    "L": {
+      "item": "ic2:gold_cable"
+    },
+    "M": {
+      "item": "ic2:lv_transformer"
+    }
+  },
+  "result": {
+    "id": "ic2:mv_transformer",
+    "count": 1
+  }
+}

@@ -23,6 +23,8 @@ import ic2.core.block.storage.ChargepadMfsuBlockEntity;
 import ic2.core.block.storage.CesuBlockEntity;
 import ic2.core.block.storage.MfeBlockEntity;
 import ic2.core.block.storage.MfsuBlockEntity;
+import ic2.core.block.wiring.CableBlockEntity;
+import ic2.core.block.wiring.TransformerBlockEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -118,6 +120,38 @@ public final class IC2BlockEntities {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ChargepadMfsuBlockEntity>> CHARGEPAD_MFSU = BLOCK_ENTITY_TYPES.register(
             "chargepad_mfsu",
             () -> BlockEntityType.Builder.of(ChargepadMfsuBlockEntity::new, IC2Blocks.CHARGEPAD_MFSU.get()).build(null)
+    );
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CableBlockEntity>> TIN_CABLE = BLOCK_ENTITY_TYPES.register(
+            "tin_cable",
+            () -> BlockEntityType.Builder.of(CableBlockEntity::new, IC2Blocks.TIN_CABLE.get()).build(null)
+    );
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CableBlockEntity>> COPPER_CABLE = BLOCK_ENTITY_TYPES.register(
+            "copper_cable",
+            () -> BlockEntityType.Builder.of(CableBlockEntity::new, IC2Blocks.COPPER_CABLE.get()).build(null)
+    );
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CableBlockEntity>> GOLD_CABLE = BLOCK_ENTITY_TYPES.register(
+            "gold_cable",
+            () -> BlockEntityType.Builder.of(CableBlockEntity::new, IC2Blocks.GOLD_CABLE.get()).build(null)
+    );
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CableBlockEntity>> GLASS_FIBRE_CABLE = BLOCK_ENTITY_TYPES.register(
+            "glass_fibre_cable",
+            () -> BlockEntityType.Builder.of(CableBlockEntity::new, IC2Blocks.GLASS_FIBRE_CABLE.get()).build(null)
+    );
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TransformerBlockEntity>> LV_TRANSFORMER = BLOCK_ENTITY_TYPES.register(
+            "lv_transformer",
+            () -> BlockEntityType.Builder.of(TransformerBlockEntity::new, IC2Blocks.LV_TRANSFORMER.get()).build(null)
+    );
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TransformerBlockEntity>> MV_TRANSFORMER = BLOCK_ENTITY_TYPES.register(
+            "mv_transformer",
+            () -> BlockEntityType.Builder.of(TransformerBlockEntity::new, IC2Blocks.MV_TRANSFORMER.get()).build(null)
+    );
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TransformerBlockEntity>> HV_TRANSFORMER = BLOCK_ENTITY_TYPES.register(
+            "hv_transformer",
+            () -> BlockEntityType.Builder.of(TransformerBlockEntity::new, IC2Blocks.HV_TRANSFORMER.get()).build(null)
+    );
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TransformerBlockEntity>> EV_TRANSFORMER = BLOCK_ENTITY_TYPES.register(
+            "ev_transformer",
+            () -> BlockEntityType.Builder.of(TransformerBlockEntity::new, IC2Blocks.EV_TRANSFORMER.get()).build(null)
     );
 
     private IC2BlockEntities() {

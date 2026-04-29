@@ -1,6 +1,7 @@
 package ic2.core.block.storage;
 
 import ic2.core.energy.EnergyConsumer;
+import ic2.core.energy.EnergyNetHelper;
 import ic2.core.energy.EnergyTier;
 import ic2.core.item.electric.ElectricItemManager;
 import ic2.core.menu.BatBoxMenu;
@@ -114,12 +115,48 @@ public abstract class BaseEnergyStorageBlockEntity extends BlockEntity implement
         return outputPerTick;
     }
 
+    public void chargePlayerInventory(Inventory playerInventory) {
+        if (level == null || level.isClientSide || energyStored <= 0) {
+            return;
+        }
+
+        int budget = Math.min(outputPerTick, energyStored);
+        int before = budget;
+
+        for (var target : playerInventory.items) {
+            if (budget <= 0) {
+                break;
+            }
+            budget = chargeTarget(target, budget);
+        }
+
+        for (var target : playerInventory.offhand) {
+            if (budget <= 0) {
+                break;
+            }
+            budget = chargeTarget(target, budget);
+        }
+
+        for (var target : playerInventory.armor) {
+            if (budget <= 0) {
+                break;
+            }
+            budget = chargeTarget(target, budget);
+        }
+
+        int used = before - budget;
+        if (used > 0) {
+            energyStored -= used;
+            setChanged();
+        }
+    }
+
     public boolean isChargeableItem(net.minecraft.world.item.ItemStack stack) {
-        return ElectricItemManager.isElectricItem(stack);
+        return ElectricItemManager.canAcceptEnergy(stack);
     }
 
     public boolean isDischargeableItem(net.minecraft.world.item.ItemStack stack) {
-        return ElectricItemManager.canProvideEnergy(stack);
+        return ElectricItemManager.canProvideEnergy(stack) && ElectricItemManager.hasEnergy(stack);
     }
 
     @Override
@@ -241,14 +278,18 @@ public abstract class BaseEnergyStorageBlockEntity extends BlockEntity implement
         }
 
         Direction outputSide = getBlockState().getValue(EnergyStorageBlock.FACING);
-        BlockEntity blockEntity = level.getBlockEntity(worldPosition.relative(outputSide));
-        if (!(blockEntity instanceof EnergyConsumer consumer) || !consumer.canReceiveEnergy()) {
-            return;
+        int packet = Math.min(outputPerTick, energyStored);
+        int sent = EnergyNetHelper.sendEnergy(level, worldPosition, outputSide, packet, sourceTier);
+        energyStored -= sent;
+    }
+
+    private int chargeTarget(net.minecraft.world.item.ItemStack target, int budget) {
+        if (target.isEmpty() || !ElectricItemManager.canAcceptEnergy(target)) {
+            return budget;
         }
 
-        int packet = Math.min(outputPerTick, energyStored);
-        int sent = consumer.receiveEu(packet, sourceTier, false);
-        energyStored -= sent;
+        int accepted = ElectricItemManager.charge(target, budget);
+        return budget - accepted;
     }
 
     protected void afterBaseTick() {

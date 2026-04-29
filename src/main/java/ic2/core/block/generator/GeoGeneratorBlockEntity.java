@@ -1,7 +1,9 @@
 package ic2.core.block.generator;
 
 import ic2.core.init.IC2BlockEntities;
+import ic2.core.init.IC2Sounds;
 import net.minecraft.core.BlockPos;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -24,5 +26,10 @@ public final class GeoGeneratorBlockEntity extends GeneratorBlockEntity {
     @Override
     protected ItemStack getFuelRemainder(ItemStack stack) {
         return stack.is(Items.LAVA_BUCKET) ? new ItemStack(Items.BUCKET) : ItemStack.EMPTY;
+    }
+
+    @Override
+    protected SoundEvent getOperatingSound() {
+        return IC2Sounds.GEOTHERMAL_OPERATING.get();
     }
 }

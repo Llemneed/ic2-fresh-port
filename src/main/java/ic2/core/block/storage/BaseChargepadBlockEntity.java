@@ -90,7 +90,7 @@ public abstract class BaseChargepadBlockEntity extends BaseEnergyStorageBlockEnt
     }
 
     private int transferEnergy(ItemStack target, int budget) {
-        if (target.isEmpty() || !ElectricItemManager.isElectricItem(target)) {
+        if (target.isEmpty() || !ElectricItemManager.canAcceptEnergy(target)) {
             return budget;
         }
 

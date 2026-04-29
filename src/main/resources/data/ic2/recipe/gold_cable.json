@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "GRG"
+  ],
+  "key": {
+    "G": {
+      "item": "minecraft:gold_ingot"
+    },
+    "R": {
+      "item": "ic2:rubber"
+    }
+  },
+  "result": {
+    "id": "ic2:gold_cable",
+    "count": 4
+  }
+}

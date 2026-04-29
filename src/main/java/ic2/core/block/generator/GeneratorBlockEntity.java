@@ -1,15 +1,18 @@
 package ic2.core.block.generator;
 
-import ic2.core.energy.EnergyConsumer;
+import ic2.core.energy.EnergyNetHelper;
 import ic2.core.energy.EnergyTier;
 import ic2.core.init.IC2BlockEntities;
 import ic2.core.init.IC2Items;
+import ic2.core.init.IC2Sounds;
 import ic2.core.menu.GeneratorMenu;
+import ic2.core.sound.MachineSoundHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.network.chat.Component;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
@@ -156,6 +159,7 @@ public class GeneratorBlockEntity extends BlockEntity implements MenuProvider {
         if (burning && energyStored < maxEnergy) {
             burnTime--;
             energyStored = Math.min(maxEnergy, energyStored + energyPerTick);
+            MachineSoundHelper.playLoop(level, pos, getOperatingSound());
         }
 
         if (!burning && energyStored <= maxEnergy - energyPerTick) {
@@ -195,6 +199,10 @@ public class GeneratorBlockEntity extends BlockEntity implements MenuProvider {
         return stack.getCraftingRemainingItem();
     }
 
+    protected SoundEvent getOperatingSound() {
+        return IC2Sounds.GENERATOR_OPERATING.get();
+    }
+
     private void pushEnergy() {
         if (level == null || energyStored <= 0) {
             return;
@@ -205,12 +213,9 @@ public class GeneratorBlockEntity extends BlockEntity implements MenuProvider {
                 return;
             }
 
-            BlockEntity blockEntity = level.getBlockEntity(worldPosition.relative(direction));
-            if (blockEntity instanceof EnergyConsumer consumer && consumer.canReceiveEnergy()) {
-                int packet = Math.min(outputPerTick, energyStored);
-                int sent = consumer.receiveEu(packet, sourceTier, false);
-                energyStored -= sent;
-            }
+            int packet = Math.min(outputPerTick, energyStored);
+            int sent = EnergyNetHelper.sendEnergy(level, worldPosition, direction, packet, sourceTier);
+            energyStored -= sent;
         }
     }
 

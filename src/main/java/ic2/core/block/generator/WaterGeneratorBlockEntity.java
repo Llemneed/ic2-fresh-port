@@ -1,8 +1,10 @@
 package ic2.core.block.generator;
 
 import ic2.core.init.IC2BlockEntities;
+import ic2.core.init.IC2Sounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
@@ -32,5 +34,10 @@ public final class WaterGeneratorBlockEntity extends BasePassiveGeneratorBlockEn
         }
 
         return Math.min(4, adjacentWater);
+    }
+
+    @Override
+    protected SoundEvent getOperatingSound() {
+        return IC2Sounds.WATERMILL_OPERATING.get();
     }
 }

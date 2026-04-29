@@ -7,6 +7,7 @@ import ic2.core.init.IC2BlockEntities;
 import ic2.core.init.IC2ArmorMaterials;
 import ic2.core.init.IC2Items;
 import ic2.core.init.IC2Menus;
+import ic2.core.init.IC2Sounds;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import org.slf4j.Logger;
@@ -22,6 +23,7 @@ public final class IC2 {
         IC2ArmorMaterials.ARMOR_MATERIALS.register(modEventBus);
         IC2Items.ITEMS.register(modEventBus);
         IC2Menus.MENUS.register(modEventBus);
+        IC2Sounds.SOUND_EVENTS.register(modEventBus);
         IC2CreativeTabs.TABS.register(modEventBus);
 
         LOGGER.info("Bootstrapping IndustrialCraft 2 fresh port for Minecraft 1.21.1 / NeoForge 21.1.227");

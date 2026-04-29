@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "TRT"
+  ],
+  "key": {
+    "T": {
+      "item": "ic2:tin_ingot"
+    },
+    "R": {
+      "item": "ic2:rubber"
+    }
+  },
+  "result": {
+    "id": "ic2:tin_cable",
+    "count": 4
+  }
+}

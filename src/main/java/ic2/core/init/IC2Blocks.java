@@ -24,6 +24,10 @@ import ic2.core.block.storage.ChargepadMfsuBlock;
 import ic2.core.block.storage.CesuBlock;
 import ic2.core.block.storage.MfeBlock;
 import ic2.core.block.storage.MfsuBlock;
+import ic2.core.block.wiring.CableBlock;
+import ic2.core.block.wiring.CableType;
+import ic2.core.block.wiring.TransformerBlock;
+import ic2.core.block.wiring.TransformerType;
 import java.util.Optional;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LeavesBlock;
@@ -166,6 +170,46 @@ public final class IC2Blocks {
             "chargepad_mfsu",
             ChargepadMfsuBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).requiresCorrectToolForDrops().strength(3.5F).noOcclusion()
+    );
+    public static final DeferredBlock<CableBlock> TIN_CABLE = BLOCKS.registerBlock(
+            "tin_cable",
+            properties -> new CableBlock(CableType.TIN, properties),
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(0.8F)
+    );
+    public static final DeferredBlock<CableBlock> COPPER_CABLE = BLOCKS.registerBlock(
+            "copper_cable",
+            properties -> new CableBlock(CableType.COPPER, properties),
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(0.8F)
+    );
+    public static final DeferredBlock<CableBlock> GOLD_CABLE = BLOCKS.registerBlock(
+            "gold_cable",
+            properties -> new CableBlock(CableType.GOLD, properties),
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(0.8F)
+    );
+    public static final DeferredBlock<CableBlock> GLASS_FIBRE_CABLE = BLOCKS.registerBlock(
+            "glass_fibre_cable",
+            properties -> new CableBlock(CableType.GLASS_FIBRE, properties),
+            BlockBehaviour.Properties.ofFullCopy(Blocks.GLASS).strength(0.5F)
+    );
+    public static final DeferredBlock<TransformerBlock> LV_TRANSFORMER = BLOCKS.registerBlock(
+            "lv_transformer",
+            properties -> new TransformerBlock(TransformerType.LV, properties),
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).requiresCorrectToolForDrops().strength(3.5F)
+    );
+    public static final DeferredBlock<TransformerBlock> MV_TRANSFORMER = BLOCKS.registerBlock(
+            "mv_transformer",
+            properties -> new TransformerBlock(TransformerType.MV, properties),
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).requiresCorrectToolForDrops().strength(3.5F)
+    );
+    public static final DeferredBlock<TransformerBlock> HV_TRANSFORMER = BLOCKS.registerBlock(
+            "hv_transformer",
+            properties -> new TransformerBlock(TransformerType.HV, properties),
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).requiresCorrectToolForDrops().strength(3.5F)
+    );
+    public static final DeferredBlock<TransformerBlock> EV_TRANSFORMER = BLOCKS.registerBlock(
+            "ev_transformer",
+            properties -> new TransformerBlock(TransformerType.EV, properties),
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).requiresCorrectToolForDrops().strength(3.5F)
     );
 
     public static final DeferredBlock<RubberWoodBlock> RUBBER_WOOD = BLOCKS.registerBlock(

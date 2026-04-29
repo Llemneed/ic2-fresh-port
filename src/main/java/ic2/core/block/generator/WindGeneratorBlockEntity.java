@@ -1,7 +1,9 @@
 package ic2.core.block.generator;
 
 import ic2.core.init.IC2BlockEntities;
+import ic2.core.init.IC2Sounds;
 import net.minecraft.core.BlockPos;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -29,5 +31,10 @@ public final class WindGeneratorBlockEntity extends BasePassiveGeneratorBlockEnt
         int heightBonus = Math.max(0, (worldPosition.getY() - 64) / 32);
         int weatherBonus = level.isThundering() ? 2 : (level.isRaining() ? 1 : 0);
         return Math.min(8, base + heightBonus + weatherBonus);
+    }
+
+    @Override
+    protected SoundEvent getOperatingSound() {
+        return IC2Sounds.WINDMILL_OPERATING.get();
     }
 }

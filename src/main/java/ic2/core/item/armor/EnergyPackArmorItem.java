@@ -88,23 +88,21 @@ public final class EnergyPackArmorItem extends ArmorItem implements ElectricItem
             }
             budget = transferEnergy(source, target, budget);
         }
+
+        for (ItemStack target : player.getInventory().armor) {
+            if (budget <= 0) {
+                break;
+            }
+            budget = transferEnergy(source, target, budget);
+        }
     }
 
     private int transferEnergy(ItemStack source, ItemStack target, int budget) {
-        if (target.isEmpty() || target == source || !ElectricItemManager.isElectricItem(target)) {
+        if (target.isEmpty() || target == source || !ElectricItemManager.canAcceptEnergy(target)) {
             return budget;
         }
 
-        int extracted = ElectricItemManager.discharge(source, budget, true);
-        if (extracted <= 0) {
-            return 0;
-        }
-
-        int accepted = ElectricItemManager.charge(target, extracted);
-        if (accepted < extracted) {
-            ElectricItemManager.charge(source, extracted - accepted);
-        }
-
+        int accepted = ElectricItemManager.transfer(source, target, budget, true);
         return budget - accepted;
     }
 
