@@ -1,6 +1,7 @@
 package ic2.core.block.generator;
 
 import ic2.core.energy.EnergyConsumer;
+import ic2.core.energy.EnergyTier;
 import ic2.core.init.IC2BlockEntities;
 import ic2.core.init.IC2Items;
 import ic2.core.menu.GeneratorMenu;
@@ -68,6 +69,7 @@ public class GeneratorBlockEntity extends BlockEntity implements MenuProvider {
     private final int energyPerTick;
     private final int maxEnergy;
     private final int outputPerTick;
+    private final EnergyTier sourceTier;
     private final String displayKey;
     private int burnTime;
     private int burnTimeTotal;
@@ -90,6 +92,7 @@ public class GeneratorBlockEntity extends BlockEntity implements MenuProvider {
         this.energyPerTick = energyPerTick;
         this.maxEnergy = maxEnergy;
         this.outputPerTick = outputPerTick;
+        this.sourceTier = EnergyTier.forPacket(outputPerTick);
         this.displayKey = displayKey;
     }
 
@@ -205,13 +208,7 @@ public class GeneratorBlockEntity extends BlockEntity implements MenuProvider {
             BlockEntity blockEntity = level.getBlockEntity(worldPosition.relative(direction));
             if (blockEntity instanceof EnergyConsumer consumer && consumer.canReceiveEnergy()) {
                 int packet = Math.min(outputPerTick, energyStored);
-                if (packet > consumer.maxInputPerTick()) {
-                    consumer.onOvervoltage(packet);
-                    energyStored -= packet;
-                    continue;
-                }
-
-                int sent = consumer.receiveEnergy(packet);
+                int sent = consumer.receiveEu(packet, sourceTier, false);
                 energyStored -= sent;
             }
         }

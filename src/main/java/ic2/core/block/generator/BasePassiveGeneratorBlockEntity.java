@@ -1,6 +1,7 @@
 package ic2.core.block.generator;
 
 import ic2.core.energy.EnergyConsumer;
+import ic2.core.energy.EnergyTier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -18,6 +19,7 @@ import net.minecraft.world.level.block.state.BlockState;
 public abstract class BasePassiveGeneratorBlockEntity extends BlockEntity implements MenuProvider {
     private final int maxEnergy;
     private final int outputPerTick;
+    private final EnergyTier sourceTier;
     private final String displayKey;
     protected int energyStored;
 
@@ -32,6 +34,7 @@ public abstract class BasePassiveGeneratorBlockEntity extends BlockEntity implem
         super(type, pos, blockState);
         this.maxEnergy = maxEnergy;
         this.outputPerTick = outputPerTick;
+        this.sourceTier = EnergyTier.forPacket(outputPerTick);
         this.displayKey = displayKey;
     }
 
@@ -60,13 +63,7 @@ public abstract class BasePassiveGeneratorBlockEntity extends BlockEntity implem
             BlockEntity blockEntity = level.getBlockEntity(worldPosition.relative(direction));
             if (blockEntity instanceof EnergyConsumer consumer && consumer.canReceiveEnergy()) {
                 int packet = Math.min(outputPerTick, energyStored);
-                if (packet > consumer.maxInputPerTick()) {
-                    consumer.onOvervoltage(packet);
-                    energyStored -= packet;
-                    continue;
-                }
-
-                int sent = consumer.receiveEnergy(packet);
+                int sent = consumer.receiveEu(packet, sourceTier, false);
                 energyStored -= sent;
             }
         }

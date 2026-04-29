@@ -1,6 +1,7 @@
 package ic2.core.block.storage;
 
 import ic2.core.energy.EnergyConsumer;
+import ic2.core.energy.EnergyTier;
 import ic2.core.item.electric.ElectricItemManager;
 import ic2.core.menu.BatBoxMenu;
 import net.minecraft.core.BlockPos;
@@ -27,6 +28,8 @@ public abstract class BaseEnergyStorageBlockEntity extends BlockEntity implement
     private final int maxEnergy;
     private final int outputPerTick;
     private final int inputPerTick;
+    private final EnergyTier sinkTier;
+    private final EnergyTier sourceTier;
     private final String displayKey;
 
     private final ItemStackHandler inventory = new ItemStackHandler(2) {
@@ -74,6 +77,8 @@ public abstract class BaseEnergyStorageBlockEntity extends BlockEntity implement
         this.maxEnergy = maxEnergy;
         this.outputPerTick = outputPerTick;
         this.inputPerTick = inputPerTick;
+        this.sinkTier = EnergyTier.forPacket(inputPerTick);
+        this.sourceTier = EnergyTier.forPacket(outputPerTick);
         this.displayKey = displayKey;
     }
 
@@ -98,6 +103,10 @@ public abstract class BaseEnergyStorageBlockEntity extends BlockEntity implement
     }
 
     public int getMaxEnergy() {
+        return maxEnergy;
+    }
+
+    public int getMaxEnergyStored() {
         return maxEnergy;
     }
 
@@ -175,6 +184,11 @@ public abstract class BaseEnergyStorageBlockEntity extends BlockEntity implement
     }
 
     @Override
+    public EnergyTier getSinkTier() {
+        return sinkTier;
+    }
+
+    @Override
     public void onOvervoltage(int amount) {
         if (level == null || level.isClientSide) {
             return;
@@ -233,13 +247,7 @@ public abstract class BaseEnergyStorageBlockEntity extends BlockEntity implement
         }
 
         int packet = Math.min(outputPerTick, energyStored);
-        if (packet > consumer.maxInputPerTick()) {
-            consumer.onOvervoltage(packet);
-            energyStored -= packet;
-            return;
-        }
-
-        int sent = consumer.receiveEnergy(packet);
+        int sent = consumer.receiveEu(packet, sourceTier, false);
         energyStored -= sent;
     }
 
