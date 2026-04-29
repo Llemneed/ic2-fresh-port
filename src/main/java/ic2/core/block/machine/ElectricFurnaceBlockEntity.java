@@ -1,12 +1,10 @@
 package ic2.core.block.machine;
 
+import ic2.core.block.entity.AbstractProcessingMachineBlockEntity;
 import ic2.core.energy.EnergyConsumer;
 import ic2.core.init.IC2BlockEntities;
 import ic2.core.init.IC2Blocks;
-import ic2.core.item.electric.ElectricItemManager;
-import ic2.core.init.IC2Items;
 import ic2.core.init.IC2Sounds;
-import ic2.core.item.upgrade.MachineUpgradeItem;
 import ic2.core.item.upgrade.MachineUpgradeItem.UpgradeType;
 import ic2.core.menu.ElectricFurnaceMenu;
 import ic2.core.sound.MachineSoundHelper;
@@ -24,18 +22,16 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.item.crafting.SmeltingRecipe;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.ItemStackHandler;
 
-public final class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvider, EnergyConsumer {
+public final class ElectricFurnaceBlockEntity extends AbstractProcessingMachineBlockEntity implements MenuProvider, EnergyConsumer {
     private static final int SLOT_COUNT = 7;
     private static final int INPUT_SLOT = 0;
     private static final int OUTPUT_SLOT = 1;
@@ -48,13 +44,6 @@ public final class ElectricFurnaceBlockEntity extends BlockEntity implements Men
     private static final int ENERGY_PER_REDSTONE_CHARGE = 200;
     private static final int ENERGY_STORAGE_PER_UPGRADE = 10000;
     private static final int[] INPUT_TIERS = {32, 128, 512, 2048, 8192};
-
-    private final ItemStackHandler inventory = new ItemStackHandler(SLOT_COUNT) {
-        @Override
-        protected void onContentsChanged(int slot) {
-            setChanged();
-        }
-    };
 
     private final ContainerData data = new ContainerData() {
         @Override
@@ -84,12 +73,24 @@ public final class ElectricFurnaceBlockEntity extends BlockEntity implements Men
         }
     };
 
-    private int progress;
-    private int energyStored;
     private float pendingExperience;
 
     public ElectricFurnaceBlockEntity(BlockPos pos, BlockState blockState) {
-        super(IC2BlockEntities.ELECTRIC_FURNACE.get(), pos, blockState);
+        super(
+                IC2BlockEntities.ELECTRIC_FURNACE.get(),
+                pos,
+                blockState,
+                SLOT_COUNT,
+                INPUT_SLOT,
+                OUTPUT_SLOT,
+                UPGRADE_START,
+                UPGRADE_END,
+                CHARGE_SLOT,
+                MAX_ENERGY,
+                ENERGY_PER_REDSTONE_CHARGE,
+                ENERGY_STORAGE_PER_UPGRADE,
+                INPUT_TIERS
+        );
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, ElectricFurnaceBlockEntity blockEntity) {
@@ -109,7 +110,7 @@ public final class ElectricFurnaceBlockEntity extends BlockEntity implements Men
         if (canProcess) {
             blockEntity.energyStored -= energyPerTick;
             blockEntity.progress++;
-            MachineSoundHelper.playLoop(level, pos, IC2Sounds.ELECTRIC_FURNACE_OPERATING.get());
+            MachineSoundHelper.playPeriodic(level, pos, IC2Sounds.ELECTRIC_FURNACE_OPERATING.get());
 
             if (blockEntity.progress >= maxProgress) {
                 blockEntity.progress = 0;
@@ -163,7 +164,7 @@ public final class ElectricFurnaceBlockEntity extends BlockEntity implements Men
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
-        tag.put("inventory", inventory.serializeNBT(registries));
+        saveInventory(tag, registries);
         tag.putInt("progress", progress);
         tag.putInt("energy", energyStored);
         tag.putFloat("pendingExperience", pendingExperience);
@@ -186,10 +187,6 @@ public final class ElectricFurnaceBlockEntity extends BlockEntity implements Men
         return getUpgradeType(stack) != null;
     }
 
-    public boolean isChargeItem(ItemStack stack) {
-        return stack.is(Items.REDSTONE) || ElectricItemManager.canProvideEnergy(stack);
-    }
-
     public void awardExperience(Player player) {
         if (!(level instanceof ServerLevel serverLevel) || pendingExperience <= 0.0F) {
             return;
@@ -206,42 +203,6 @@ public final class ElectricFurnaceBlockEntity extends BlockEntity implements Men
         if (experience > 0) {
             ExperienceOrb.award(serverLevel, player.position(), experience);
         }
-    }
-
-    public int getMaxEnergyStored() {
-        return MAX_ENERGY + getUpgradeCount(UpgradeType.ENERGY_STORAGE) * ENERGY_STORAGE_PER_UPGRADE;
-    }
-
-    @Override
-    public int receiveEnergy(int amount) {
-        int accepted = Math.min(Math.min(amount, maxInputPerTick()), getMaxEnergyStored() - energyStored);
-        energyStored += accepted;
-        if (accepted > 0) {
-            setChanged();
-        }
-        return accepted;
-    }
-
-    @Override
-    public boolean canReceiveEnergy() {
-        return energyStored < getMaxEnergyStored();
-    }
-
-    @Override
-    public int maxInputPerTick() {
-        int tier = Math.min(getUpgradeCount(UpgradeType.TRANSFORMER), INPUT_TIERS.length - 1);
-        return INPUT_TIERS[tier];
-    }
-
-    @Override
-    public void onOvervoltage(int amount) {
-        if (level == null || level.isClientSide) {
-            return;
-        }
-
-        BlockPos pos = getBlockPos();
-        level.removeBlock(pos, false);
-        level.explode(null, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 2.0F, Level.ExplosionInteraction.BLOCK);
     }
 
     private RecipeHolder<SmeltingRecipe> getRecipe(ItemStack input) {
@@ -276,87 +237,11 @@ public final class ElectricFurnaceBlockEntity extends BlockEntity implements Men
         return ItemStack.isSameItemSameComponents(output, result) && output.getCount() + result.getCount() <= output.getMaxStackSize();
     }
 
-    private void consumeChargeItem() {
-        ItemStack chargeStack = inventory.getStackInSlot(CHARGE_SLOT);
-        if (!isChargeItem(chargeStack)) {
-            return;
-        }
-
-        int missing = getMaxEnergyStored() - energyStored;
-        if (missing <= 0) {
-            return;
-        }
-
-        int discharged = ElectricItemManager.discharge(chargeStack, missing, true);
-        if (discharged > 0) {
-            inventory.setStackInSlot(CHARGE_SLOT, chargeStack);
-            energyStored = Math.min(getMaxEnergyStored(), energyStored + discharged);
-            setChanged();
-            return;
-        }
-
-        if (energyStored > getMaxEnergyStored() - ENERGY_PER_REDSTONE_CHARGE) {
-            return;
-        }
-
-        chargeStack.shrink(1);
-        inventory.setStackInSlot(CHARGE_SLOT, chargeStack);
-        energyStored = Math.min(getMaxEnergyStored(), energyStored + ENERGY_PER_REDSTONE_CHARGE);
-        setChanged();
-    }
-
-    private int getUpgradeCount(UpgradeType type) {
-        int upgrades = 0;
-        for (int slot = UPGRADE_START; slot <= UPGRADE_END; slot++) {
-            ItemStack stack = inventory.getStackInSlot(slot);
-            if (getUpgradeType(stack) == type) {
-                upgrades += stack.getCount();
-            }
-        }
-        return upgrades;
-    }
-
     private int getMaxProgress() {
-        int upgrades = Math.min(4, getUpgradeCount(UpgradeType.OVERCLOCKER));
-        double scaledProgress = BASE_MAX_PROGRESS * Math.pow(0.7D, upgrades);
-        return Math.max(20, Mth.ceil(scaledProgress));
+        return scaledProgress(BASE_MAX_PROGRESS, 20);
     }
 
     private int getEnergyPerTick() {
-        int upgrades = Math.min(4, getUpgradeCount(UpgradeType.OVERCLOCKER));
-        return Math.max(BASE_ENERGY_PER_TICK, Mth.ceil(BASE_ENERGY_PER_TICK * Math.pow(1.6D, upgrades)));
-    }
-
-    private UpgradeType getUpgradeType(ItemStack stack) {
-        if (!(stack.getItem() instanceof MachineUpgradeItem upgradeItem)) {
-            return null;
-        }
-        return upgradeItem.getType();
-    }
-
-    private boolean canWorkWithRedstone() {
-        if (level == null) {
-            return true;
-        }
-
-        if (getUpgradeCount(UpgradeType.REDSTONE_INVERTER) <= 0) {
-            return true;
-        }
-
-        return level.hasNeighborSignal(worldPosition);
-    }
-
-    private void loadInventory(CompoundTag inventoryTag, HolderLookup.Provider registries) {
-        ItemStackHandler loadedInventory = new ItemStackHandler(1);
-        loadedInventory.deserializeNBT(registries, inventoryTag);
-
-        for (int slot = 0; slot < inventory.getSlots(); slot++) {
-            inventory.setStackInSlot(slot, ItemStack.EMPTY);
-        }
-
-        int copySlots = Math.min(inventory.getSlots(), loadedInventory.getSlots());
-        for (int slot = 0; slot < copySlots; slot++) {
-            inventory.setStackInSlot(slot, loadedInventory.getStackInSlot(slot).copy());
-        }
+        return scaledEnergyPerTick(BASE_ENERGY_PER_TICK);
     }
 }

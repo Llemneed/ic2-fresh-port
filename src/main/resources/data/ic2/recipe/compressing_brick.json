@@ -1,0 +1,12 @@
+{
+  "type": "ic2:compressing",
+  "ingredient": {
+    "item": "minecraft:brick"
+  },
+  "ingredientCount": 4,
+  "result": {
+    "id": "minecraft:bricks",
+    "count": 1
+  },
+  "energy": 240
+}

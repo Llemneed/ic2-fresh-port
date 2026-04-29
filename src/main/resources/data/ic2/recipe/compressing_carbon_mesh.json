@@ -1,0 +1,12 @@
+{
+  "type": "ic2:compressing",
+  "ingredient": {
+    "item": "ic2:carbon_mesh"
+  },
+  "ingredientCount": 1,
+  "result": {
+    "id": "ic2:carbon_plate",
+    "count": 1
+  },
+  "energy": 120
+}

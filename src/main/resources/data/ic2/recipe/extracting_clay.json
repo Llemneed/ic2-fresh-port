@@ -1,0 +1,11 @@
+{
+  "type": "ic2:extracting",
+  "ingredient": {
+    "item": "minecraft:clay"
+  },
+  "result": {
+    "id": "minecraft:clay_ball",
+    "count": 4
+  },
+  "ingredientCount": 1
+}

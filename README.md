@@ -1,25 +1,66 @@
+# IC2 Fresh Port
 
-Installation information
-=======
+Fresh port of IndustrialCraft 2 to Minecraft 1.21.1 / NeoForge.
 
-This template repository can be directly cloned to get you started with a new
-mod. Simply create a new repository cloned from this one, by following the
-instructions provided by [GitHub](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
+## Status
 
-Once you have your clone, simply open the repository in the IDE of your choice. The usual recommendation for an IDE is either IntelliJ IDEA or Eclipse.
+Early development / not production ready.
 
-If at any point you are missing libraries in your IDE, or you've run into problems you can
-run `gradlew --refresh-dependencies` to refresh the local cache. `gradlew clean` to reset everything 
-{this does not affect your code} and then start the process again.
+## Target Versions
 
-Mapping Names:
-============
-By default, the MDK is configured to use the official mapping names from Mojang for methods and fields 
-in the Minecraft codebase. These names are covered by a specific license. All modders should be aware of this
-license. For the latest license text, refer to the mapping file itself, or the reference copy here:
-https://github.com/NeoForged/NeoForm/blob/main/Mojang.md
+- Minecraft 1.21.1
+- NeoForge 21.1.227
+- Java 21
+- Gradle wrapper
 
-Additional Resources: 
-==========
-Community Documentation: https://docs.neoforged.net/  
-NeoForged Discord: https://discord.neoforged.net/
+## Implemented So Far
+
+- bootstrap and main mod entrypoint
+- deferred registries for blocks, items, menus, sounds, block entities and tabs
+- basic blocks and materials
+- IC2 ores with ported worldgen values
+- rubber tree blocks and sapling
+- core machines
+- generators
+- storage blocks and basic EU tiers
+- basic machine sounds
+- basic menus and screens
+
+## Not Ready Yet
+
+- full EU cable network parity
+- fully data-driven machine recipes
+- JEI/EMI integration
+- full worldgen balancing
+- full IC2 feature parity
+- proper end-user documentation
+
+## Build
+
+```bash
+./gradlew build
+```
+
+## Run Client
+
+```bash
+./gradlew runClient
+```
+
+## Run Data Generation
+
+```bash
+./gradlew runData
+```
+
+## Warning
+
+This is an unofficial fresh port / development workspace.
+
+## Credits And License
+
+This project is inspired by and based on IndustrialCraft 2 reference material and fresh-port work for Minecraft 1.21.1 / NeoForge.
+
+Credits for the original IndustrialCraft 2 authors and contributors must be preserved and respected.
+
+License and redistribution status must be verified before public release.

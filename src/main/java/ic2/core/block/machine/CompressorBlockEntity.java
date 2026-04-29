@@ -1,21 +1,21 @@
 package ic2.core.block.machine;
 
+import ic2.core.block.entity.AbstractProcessingMachineBlockEntity;
 import ic2.core.energy.EnergyConsumer;
 import ic2.core.init.IC2BlockEntities;
-import ic2.core.init.IC2Blocks;
 import ic2.core.init.IC2Items;
 import ic2.core.init.IC2Sounds;
-import ic2.core.item.electric.ElectricItemManager;
-import ic2.core.item.upgrade.MachineUpgradeItem;
 import ic2.core.item.upgrade.MachineUpgradeItem.UpgradeType;
 import ic2.core.menu.CompressorMenu;
+import ic2.core.recipe.CompressorRecipe;
+import ic2.core.recipe.IC2RecipeTypes;
 import ic2.core.sound.MachineSoundHelper;
 import java.util.List;
+import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.Mth;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
@@ -24,14 +24,15 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.ItemStackHandler;
 
-public final class CompressorBlockEntity extends BlockEntity implements MenuProvider, EnergyConsumer {
+public final class CompressorBlockEntity extends AbstractProcessingMachineBlockEntity implements MenuProvider, EnergyConsumer {
     private static final int SLOT_COUNT = 7;
     private static final int INPUT_SLOT = 0;
     private static final int OUTPUT_SLOT = 1;
@@ -45,28 +46,21 @@ public final class CompressorBlockEntity extends BlockEntity implements MenuProv
     private static final int ENERGY_STORAGE_PER_UPGRADE = 10000;
     private static final int[] INPUT_TIERS = {32, 128, 512, 2048, 8192};
 
-    private record CompressorRecipe(int inputCount, java.util.function.Predicate<ItemStack> matches, ItemStack output) {
+    private record LegacyCompressorRecipe(int inputCount, Predicate<ItemStack> matches, ItemStack output) {
     }
 
-    private static final List<CompressorRecipe> RECIPES = List.of(
-            new CompressorRecipe(4, stack -> stack.is(Items.CLAY_BALL), new ItemStack(Blocks.CLAY)),
-            new CompressorRecipe(4, stack -> stack.is(Items.BRICK), new ItemStack(Blocks.BRICKS)),
-            new CompressorRecipe(4, stack -> stack.is(Items.SNOWBALL), new ItemStack(Blocks.SNOW_BLOCK)),
-            new CompressorRecipe(4, stack -> stack.is(Items.GLOWSTONE_DUST), new ItemStack(Blocks.GLOWSTONE)),
-            new CompressorRecipe(9, stack -> stack.is(Items.REDSTONE), new ItemStack(Blocks.REDSTONE_BLOCK)),
-            new CompressorRecipe(9, stack -> stack.is(Items.IRON_INGOT), new ItemStack(Blocks.IRON_BLOCK)),
-            new CompressorRecipe(9, stack -> stack.is(Items.GOLD_INGOT), new ItemStack(Blocks.GOLD_BLOCK)),
-            new CompressorRecipe(1, stack -> stack.is(IC2Items.COAL_BALL.get()), new ItemStack(Blocks.COAL_BLOCK)),
-            new CompressorRecipe(1, stack -> stack.is(IC2Items.COAL_CHUNK.get()), new ItemStack(IC2Items.INDUSTRIAL_DIAMOND.get())),
-            new CompressorRecipe(1, stack -> stack.is(IC2Items.CARBON_MESH.get()), new ItemStack(IC2Items.CARBON_PLATE.get()))
+    private static final List<LegacyCompressorRecipe> RECIPES = List.of(
+            new LegacyCompressorRecipe(4, stack -> stack.is(Items.CLAY_BALL), new ItemStack(Blocks.CLAY)),
+            new LegacyCompressorRecipe(4, stack -> stack.is(Items.BRICK), new ItemStack(Blocks.BRICKS)),
+            new LegacyCompressorRecipe(4, stack -> stack.is(Items.SNOWBALL), new ItemStack(Blocks.SNOW_BLOCK)),
+            new LegacyCompressorRecipe(4, stack -> stack.is(Items.GLOWSTONE_DUST), new ItemStack(Blocks.GLOWSTONE)),
+            new LegacyCompressorRecipe(9, stack -> stack.is(Items.REDSTONE), new ItemStack(Blocks.REDSTONE_BLOCK)),
+            new LegacyCompressorRecipe(9, stack -> stack.is(Items.IRON_INGOT), new ItemStack(Blocks.IRON_BLOCK)),
+            new LegacyCompressorRecipe(9, stack -> stack.is(Items.GOLD_INGOT), new ItemStack(Blocks.GOLD_BLOCK)),
+            new LegacyCompressorRecipe(1, stack -> stack.is(IC2Items.COAL_BALL.get()), new ItemStack(Blocks.COAL_BLOCK)),
+            new LegacyCompressorRecipe(1, stack -> stack.is(IC2Items.COAL_CHUNK.get()), new ItemStack(IC2Items.INDUSTRIAL_DIAMOND.get())),
+            new LegacyCompressorRecipe(1, stack -> stack.is(IC2Items.CARBON_MESH.get()), new ItemStack(IC2Items.CARBON_PLATE.get()))
     );
-
-    private final ItemStackHandler inventory = new ItemStackHandler(SLOT_COUNT) {
-        @Override
-        protected void onContentsChanged(int slot) {
-            setChanged();
-        }
-    };
 
     private final ContainerData data = new ContainerData() {
         @Override
@@ -96,32 +90,44 @@ public final class CompressorBlockEntity extends BlockEntity implements MenuProv
         }
     };
 
-    private int progress;
-    private int energyStored;
-
     public CompressorBlockEntity(BlockPos pos, BlockState blockState) {
-        super(IC2BlockEntities.COMPRESSOR.get(), pos, blockState);
+        super(
+                IC2BlockEntities.COMPRESSOR.get(),
+                pos,
+                blockState,
+                SLOT_COUNT,
+                INPUT_SLOT,
+                OUTPUT_SLOT,
+                UPGRADE_START,
+                UPGRADE_END,
+                CHARGE_SLOT,
+                MAX_ENERGY,
+                ENERGY_PER_REDSTONE_CHARGE,
+                ENERGY_STORAGE_PER_UPGRADE,
+                INPUT_TIERS
+        );
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, CompressorBlockEntity blockEntity) {
         blockEntity.consumeChargeItem();
 
-        CompressorRecipe recipe = blockEntity.getRecipe(blockEntity.inventory.getStackInSlot(INPUT_SLOT));
+        ItemStack input = blockEntity.inventory.getStackInSlot(INPUT_SLOT);
+        ItemStack result = blockEntity.getCompressorResult(input);
         int energyPerTick = blockEntity.getEnergyPerTick();
         int maxProgress = blockEntity.getMaxProgress();
         boolean canProcess = blockEntity.canWorkWithRedstone()
-                && recipe != null
-                && blockEntity.canOutput(recipe.output)
+                && !result.isEmpty()
+                && blockEntity.canOutput(result)
                 && blockEntity.energyStored >= energyPerTick;
 
         if (canProcess) {
             blockEntity.energyStored -= energyPerTick;
             blockEntity.progress++;
-            MachineSoundHelper.playLoop(level, pos, IC2Sounds.COMPRESSOR_OPERATING.get());
+            MachineSoundHelper.playPeriodic(level, pos, IC2Sounds.COMPRESSOR_OPERATING.get());
 
             if (blockEntity.progress >= maxProgress) {
                 blockEntity.progress = 0;
-                blockEntity.process(recipe);
+                blockEntity.process(input.copy(), result.copy());
             }
         } else if (blockEntity.progress != 0) {
             blockEntity.progress = 0;
@@ -171,7 +177,7 @@ public final class CompressorBlockEntity extends BlockEntity implements MenuProv
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
-        tag.put("inventory", inventory.serializeNBT(registries));
+        saveInventory(tag, registries);
         tag.putInt("progress", progress);
         tag.putInt("energy", energyStored);
     }
@@ -185,61 +191,16 @@ public final class CompressorBlockEntity extends BlockEntity implements MenuProv
     }
 
     public boolean hasRecipe(ItemStack input) {
-        return getRecipe(input) != null;
+        return !getCompressorResult(input).isEmpty();
     }
 
     public boolean isUpgrade(ItemStack stack) {
         return getUpgradeType(stack) != null;
     }
 
-    public boolean isChargeItem(ItemStack stack) {
-        return stack.is(Items.REDSTONE) || ElectricItemManager.canProvideEnergy(stack);
-    }
-
-    public int getEnergyStored() {
-        return energyStored;
-    }
-
-    public int getMaxEnergyStored() {
-        return MAX_ENERGY + getUpgradeCount(UpgradeType.ENERGY_STORAGE) * ENERGY_STORAGE_PER_UPGRADE;
-    }
-
-    @Override
-    public int receiveEnergy(int amount) {
-        int accepted = Math.min(Math.min(amount, maxInputPerTick()), getMaxEnergyStored() - energyStored);
-        energyStored += accepted;
-        if (accepted > 0) {
-            setChanged();
-        }
-        return accepted;
-    }
-
-    @Override
-    public boolean canReceiveEnergy() {
-        return energyStored < getMaxEnergyStored();
-    }
-
-    @Override
-    public int maxInputPerTick() {
-        int tier = Math.min(getUpgradeCount(UpgradeType.TRANSFORMER), INPUT_TIERS.length - 1);
-        return INPUT_TIERS[tier];
-    }
-
-    @Override
-    public void onOvervoltage(int amount) {
-        if (level == null || level.isClientSide) {
-            return;
-        }
-
-        BlockPos pos = getBlockPos();
-        level.removeBlock(pos, false);
-        level.explode(null, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 2.0F, Level.ExplosionInteraction.BLOCK);
-    }
-
-    private void process(CompressorRecipe recipe) {
-        inventory.extractItem(INPUT_SLOT, recipe.inputCount, false);
+    private void process(ItemStack input, ItemStack result) {
+        inventory.extractItem(INPUT_SLOT, getIngredientCount(input), false);
         ItemStack output = inventory.getStackInSlot(OUTPUT_SLOT);
-        ItemStack result = recipe.output.copy();
 
         if (output.isEmpty()) {
             inventory.setStackInSlot(OUTPUT_SLOT, result);
@@ -260,11 +221,32 @@ public final class CompressorBlockEntity extends BlockEntity implements MenuProv
         return output.getCount() + result.getCount() <= output.getMaxStackSize();
     }
 
-    private CompressorRecipe getRecipe(ItemStack input) {
+    private ItemStack getCompressorResult(ItemStack input) {
         if (input.isEmpty()) {
-            return null;
+            return ItemStack.EMPTY;
         }
-        for (CompressorRecipe recipe : RECIPES) {
+
+        RecipeHolder<CompressorRecipe> recipe = getDataDrivenRecipe(input);
+        if (recipe != null) {
+            return recipe.value().assemble(new SingleRecipeInput(input), level.registryAccess()).copy();
+        }
+
+        // TODO: migrate any remaining hardcoded compressor recipes to ic2:compressing JSONs.
+        return getLegacyCompressorResult(input);
+    }
+
+    private int getIngredientCount(ItemStack input) {
+        RecipeHolder<CompressorRecipe> recipe = getDataDrivenRecipe(input);
+        if (recipe != null) {
+            return recipe.value().ingredientCount();
+        }
+
+        LegacyCompressorRecipe legacyRecipe = getLegacyRecipe(input);
+        return legacyRecipe != null ? legacyRecipe.inputCount : 1;
+    }
+
+    private LegacyCompressorRecipe getLegacyRecipe(ItemStack input) {
+        for (LegacyCompressorRecipe recipe : RECIPES) {
             if (input.getCount() >= recipe.inputCount && recipe.matches.test(input)) {
                 return recipe;
             }
@@ -272,85 +254,26 @@ public final class CompressorBlockEntity extends BlockEntity implements MenuProv
         return null;
     }
 
-    private void consumeChargeItem() {
-        ItemStack chargeStack = inventory.getStackInSlot(CHARGE_SLOT);
-        if (!isChargeItem(chargeStack)) {
-            return;
-        }
-
-        int missing = getMaxEnergyStored() - energyStored;
-        if (missing <= 0) {
-            return;
-        }
-
-        int discharged = ElectricItemManager.discharge(chargeStack, missing, true);
-        if (discharged > 0) {
-            inventory.setStackInSlot(CHARGE_SLOT, chargeStack);
-            energyStored = Math.min(getMaxEnergyStored(), energyStored + discharged);
-            setChanged();
-            return;
-        }
-
-        if (energyStored > getMaxEnergyStored() - ENERGY_PER_REDSTONE_CHARGE) {
-            return;
-        }
-
-        chargeStack.shrink(1);
-        inventory.setStackInSlot(CHARGE_SLOT, chargeStack);
-        energyStored = Math.min(getMaxEnergyStored(), energyStored + ENERGY_PER_REDSTONE_CHARGE);
-        setChanged();
+    private ItemStack getLegacyCompressorResult(ItemStack input) {
+        LegacyCompressorRecipe recipe = getLegacyRecipe(input);
+        return recipe != null ? recipe.output.copy() : ItemStack.EMPTY;
     }
 
-    private int getUpgradeCount(UpgradeType type) {
-        int upgrades = 0;
-        for (int slot = UPGRADE_START; slot <= UPGRADE_END; slot++) {
-            ItemStack stack = inventory.getStackInSlot(slot);
-            if (getUpgradeType(stack) == type) {
-                upgrades += stack.getCount();
-            }
+    private RecipeHolder<CompressorRecipe> getDataDrivenRecipe(ItemStack input) {
+        if (level == null || input.isEmpty()) {
+            return null;
         }
-        return upgrades;
+
+        return level.getRecipeManager()
+                .getRecipeFor(IC2RecipeTypes.COMPRESSING.get(), new SingleRecipeInput(input), level)
+                .orElse(null);
     }
 
     private int getMaxProgress() {
-        int upgrades = Math.min(4, getUpgradeCount(UpgradeType.OVERCLOCKER));
-        double scaledProgress = BASE_MAX_PROGRESS * Math.pow(0.7D, upgrades);
-        return Math.max(30, Mth.ceil(scaledProgress));
+        return scaledProgress(BASE_MAX_PROGRESS, 30);
     }
 
     private int getEnergyPerTick() {
-        int upgrades = Math.min(4, getUpgradeCount(UpgradeType.OVERCLOCKER));
-        return Math.max(BASE_ENERGY_PER_TICK, Mth.ceil(BASE_ENERGY_PER_TICK * Math.pow(1.6D, upgrades)));
-    }
-
-    private UpgradeType getUpgradeType(ItemStack stack) {
-        if (!(stack.getItem() instanceof MachineUpgradeItem upgradeItem)) {
-            return null;
-        }
-        return upgradeItem.getType();
-    }
-
-    private boolean canWorkWithRedstone() {
-        if (level == null) {
-            return true;
-        }
-        if (getUpgradeCount(UpgradeType.REDSTONE_INVERTER) <= 0) {
-            return true;
-        }
-        return level.hasNeighborSignal(worldPosition);
-    }
-
-    private void loadInventory(CompoundTag inventoryTag, HolderLookup.Provider registries) {
-        ItemStackHandler loadedInventory = new ItemStackHandler(1);
-        loadedInventory.deserializeNBT(registries, inventoryTag);
-
-        for (int slot = 0; slot < inventory.getSlots(); slot++) {
-            inventory.setStackInSlot(slot, ItemStack.EMPTY);
-        }
-
-        int copySlots = Math.min(inventory.getSlots(), loadedInventory.getSlots());
-        for (int slot = 0; slot < copySlots; slot++) {
-            inventory.setStackInSlot(slot, loadedInventory.getStackInSlot(slot).copy());
-        }
+        return scaledEnergyPerTick(BASE_ENERGY_PER_TICK);
     }
 }

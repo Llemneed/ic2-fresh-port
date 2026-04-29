@@ -159,7 +159,7 @@ public class GeneratorBlockEntity extends BlockEntity implements MenuProvider {
         if (burning && energyStored < maxEnergy) {
             burnTime--;
             energyStored = Math.min(maxEnergy, energyStored + energyPerTick);
-            MachineSoundHelper.playLoop(level, pos, getOperatingSound());
+            MachineSoundHelper.playPeriodic(level, pos, getOperatingSound());
         }
 
         if (!burning && energyStored <= maxEnergy - energyPerTick) {

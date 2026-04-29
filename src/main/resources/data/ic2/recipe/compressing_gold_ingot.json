@@ -1,0 +1,12 @@
+{
+  "type": "ic2:compressing",
+  "ingredient": {
+    "item": "minecraft:gold_ingot"
+  },
+  "ingredientCount": 9,
+  "result": {
+    "id": "minecraft:gold_block",
+    "count": 1
+  },
+  "energy": 540
+}

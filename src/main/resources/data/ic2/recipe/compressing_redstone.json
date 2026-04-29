@@ -1,0 +1,12 @@
+{
+  "type": "ic2:compressing",
+  "ingredient": {
+    "item": "minecraft:redstone"
+  },
+  "ingredientCount": 9,
+  "result": {
+    "id": "minecraft:redstone_block",
+    "count": 1
+  },
+  "energy": 540
+}

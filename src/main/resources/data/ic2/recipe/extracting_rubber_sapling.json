@@ -1,0 +1,11 @@
+{
+  "type": "ic2:extracting",
+  "ingredient": {
+    "item": "ic2:rubber_sapling"
+  },
+  "result": {
+    "id": "ic2:rubber",
+    "count": 1
+  },
+  "ingredientCount": 1
+}

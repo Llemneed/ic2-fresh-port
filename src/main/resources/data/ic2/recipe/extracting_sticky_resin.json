@@ -1,0 +1,11 @@
+{
+  "type": "ic2:extracting",
+  "ingredient": {
+    "item": "ic2:sticky_resin"
+  },
+  "result": {
+    "id": "ic2:rubber",
+    "count": 3
+  },
+  "ingredientCount": 1
+}

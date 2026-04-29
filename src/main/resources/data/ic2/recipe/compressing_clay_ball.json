@@ -1,0 +1,12 @@
+{
+  "type": "ic2:compressing",
+  "ingredient": {
+    "item": "minecraft:clay_ball"
+  },
+  "ingredientCount": 4,
+  "result": {
+    "id": "minecraft:clay",
+    "count": 1
+  },
+  "energy": 240
+}

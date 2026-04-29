@@ -1,0 +1,12 @@
+{
+  "type": "ic2:compressing",
+  "ingredient": {
+    "item": "ic2:coal_ball"
+  },
+  "ingredientCount": 1,
+  "result": {
+    "id": "minecraft:coal_block",
+    "count": 1
+  },
+  "energy": 120
+}

@@ -9,11 +9,15 @@ public final class MachineSoundHelper {
     private MachineSoundHelper() {
     }
 
-    public static void playLoop(Level level, BlockPos pos, SoundEvent sound) {
-        playLoop(level, pos, sound, 40L, 0.35F, 1.0F);
+    /**
+     * Periodically replays a machine sound on the server.
+     * TODO: replace with proper client-side looping sound instances during the audio polish pass.
+     */
+    public static void playPeriodic(Level level, BlockPos pos, SoundEvent sound) {
+        playPeriodic(level, pos, sound, 40L, 0.35F, 1.0F);
     }
 
-    public static void playLoop(Level level, BlockPos pos, SoundEvent sound, long interval, float volume, float pitch) {
+    public static void playPeriodic(Level level, BlockPos pos, SoundEvent sound, long interval, float volume, float pitch) {
         if (level.isClientSide || sound == null || level.getGameTime() % interval != 0L) {
             return;
         }

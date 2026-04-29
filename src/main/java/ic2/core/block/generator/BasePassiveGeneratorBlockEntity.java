@@ -46,7 +46,7 @@ public abstract class BasePassiveGeneratorBlockEntity extends BlockEntity implem
             energyStored = Math.min(maxEnergy, energyStored + generated);
             SoundEvent sound = getOperatingSound();
             if (sound != null) {
-                MachineSoundHelper.playLoop(level, pos, sound);
+                MachineSoundHelper.playPeriodic(level, pos, sound);
             }
         }
 
