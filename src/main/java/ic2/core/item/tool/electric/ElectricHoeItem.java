@@ -59,11 +59,7 @@ public final class ElectricHoeItem extends HoeItem implements ElectricItem {
 
     @Override
     public int getBarWidth(ItemStack stack) {
-        if (maxCharge <= 0) {
-            return 0;
-        }
-
-        return Math.max(1, Math.round(13.0F * ElectricItemManager.getCharge(stack) / (float) maxCharge));
+        return ElectricItemManager.getBarWidth(stack, maxCharge);
     }
 
     @Override

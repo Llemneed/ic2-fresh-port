@@ -1,3 +1,6 @@
 {
-  "parent": "ic2:block/wiring/cable/tin_cable_0"
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "ic2:item/cable/tin_cable_0"
+  }
 }

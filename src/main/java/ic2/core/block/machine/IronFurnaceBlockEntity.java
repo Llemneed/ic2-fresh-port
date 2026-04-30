@@ -141,7 +141,9 @@ public final class IronFurnaceBlockEntity extends AbstractInventoryBlockEntity i
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
-        loadInventory(tag.getCompound("inventory"), registries);
+        if (tag.contains("inventory")) {
+            loadInventory(tag.getCompound("inventory"), registries);
+        }
         progress = tag.getInt("progress");
         burnTime = tag.getInt("burnTime");
         burnTimeTotal = tag.getInt("burnTimeTotal");

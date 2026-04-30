@@ -100,7 +100,7 @@ public final class NanoSaberItem extends SwordItem implements ElectricItem {
 
     @Override
     public int getBarWidth(ItemStack stack) {
-        return Math.max(1, Math.round(13.0F * ElectricItemManager.getCharge(stack) / (float) getMaxCharge()));
+        return ElectricItemManager.getBarWidth(stack, getMaxCharge());
     }
 
     @Override

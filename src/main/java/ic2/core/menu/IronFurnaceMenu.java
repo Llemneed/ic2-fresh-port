@@ -14,6 +14,16 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.SlotItemHandler;
 
 public final class IronFurnaceMenu extends AbstractContainerMenu {
+    private static final int INPUT_SLOT = 0;
+    private static final int FUEL_SLOT = 1;
+    private static final int OUTPUT_SLOT = 2;
+    private static final int MACHINE_SLOT_START = 0;
+    private static final int MACHINE_SLOT_END = 3;
+    private static final int PLAYER_INV_START = MACHINE_SLOT_END;
+    private static final int PLAYER_INV_END = PLAYER_INV_START + 27;
+    private static final int HOTBAR_START = PLAYER_INV_END;
+    private static final int HOTBAR_END = HOTBAR_START + 9;
+
     private final IronFurnaceBlockEntity blockEntity;
     private final ContainerData data;
 
@@ -59,6 +69,10 @@ public final class IronFurnaceMenu extends AbstractContainerMenu {
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
+        if (index < 0 || index >= slots.size()) {
+            return ItemStack.EMPTY;
+        }
+
         ItemStack copied = ItemStack.EMPTY;
         Slot slot = slots.get(index);
         if (!slot.hasItem()) {
@@ -68,31 +82,33 @@ public final class IronFurnaceMenu extends AbstractContainerMenu {
         ItemStack stack = slot.getItem();
         copied = stack.copy();
 
-        if (index == 2) {
-            if (!moveItemStackTo(stack, 3, 39, true)) {
+        if (index == OUTPUT_SLOT) {
+            if (!moveItemStackTo(stack, PLAYER_INV_START, HOTBAR_END, true)) {
                 return ItemStack.EMPTY;
             }
             slot.onQuickCraft(stack, copied);
-        } else if (index == 0 || index == 1) {
-            if (!moveItemStackTo(stack, 3, 39, false)) {
+        } else if (index >= MACHINE_SLOT_START && index < MACHINE_SLOT_END) {
+            if (!moveItemStackTo(stack, PLAYER_INV_START, HOTBAR_END, false)) {
                 return ItemStack.EMPTY;
             }
         } else if (blockEntity.canSmelt(stack)) {
-            if (!moveItemStackTo(stack, 0, 1, false)) {
+            if (!moveItemStackTo(stack, INPUT_SLOT, INPUT_SLOT + 1, false)) {
                 return ItemStack.EMPTY;
             }
         } else if (IronFurnaceBlockEntity.isFuel(stack)) {
-            if (!moveItemStackTo(stack, 1, 2, false)) {
+            if (!moveItemStackTo(stack, FUEL_SLOT, FUEL_SLOT + 1, false)) {
+                return ItemStack.EMPTY;
+            }
+        } else if (index >= PLAYER_INV_START && index < PLAYER_INV_END) {
+            if (!moveItemStackTo(stack, HOTBAR_START, HOTBAR_END, false)) {
+                return ItemStack.EMPTY;
+            }
+        } else if (index >= HOTBAR_START && index < HOTBAR_END) {
+            if (!moveItemStackTo(stack, PLAYER_INV_START, PLAYER_INV_END, false)) {
                 return ItemStack.EMPTY;
             }
         } else {
-            if (index < 30) {
-                if (!moveItemStackTo(stack, 30, 39, false)) {
-                    return ItemStack.EMPTY;
-                }
-            } else if (!moveItemStackTo(stack, 3, 30, false)) {
-                return ItemStack.EMPTY;
-            }
+            return ItemStack.EMPTY;
         }
 
         if (stack.isEmpty()) {

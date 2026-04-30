@@ -51,11 +51,7 @@ public final class BatteryItem extends Item implements ElectricItem {
     @Override
     public int getBarWidth(ItemStack stack) {
         int max = getMaxCharge();
-        if (max <= 0) {
-            return 0;
-        }
-
-        return Math.max(1, Math.round(13.0F * ElectricItemManager.getCharge(stack) / (float) max));
+        return ElectricItemManager.getBarWidth(stack, max);
     }
 
     @Override

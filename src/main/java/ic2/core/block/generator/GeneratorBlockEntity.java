@@ -119,7 +119,9 @@ public class GeneratorBlockEntity extends AbstractEuInventoryBlockEntity impleme
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
-        loadInventory(tag.getCompound("inventory"), registries);
+        if (tag.contains("inventory")) {
+            loadInventory(tag.getCompound("inventory"), registries);
+        }
         burnTime = tag.getInt("burnTime");
         burnTimeTotal = tag.getInt("burnTimeTotal");
         energyStored = tag.getInt("energyStored");
@@ -156,14 +158,24 @@ public class GeneratorBlockEntity extends AbstractEuInventoryBlockEntity impleme
             ItemStack fuel = inventory.getStackInSlot(FUEL_SLOT);
             int burn = getFuelValue(fuel);
             if (burn > 0) {
+                ItemStack extractedFuel = inventory.extractItem(FUEL_SLOT, 1, false);
+                if (extractedFuel.isEmpty()) {
+                    setChanged(level, pos, state);
+                    return;
+                }
+
                 burnTime = burn;
                 burnTimeTotal = burn;
-                ItemStack remainder = getFuelRemainder(fuel.copy());
-                fuel.shrink(1);
-                if (fuel.isEmpty()) {
-                    inventory.setStackInSlot(FUEL_SLOT, remainder);
-                } else {
-                    inventory.setStackInSlot(FUEL_SLOT, fuel);
+                ItemStack remainder = getFuelRemainder(extractedFuel);
+                if (!remainder.isEmpty()) {
+                    ItemStack leftover = inventory.insertItem(FUEL_SLOT, remainder, false);
+                    if (!leftover.isEmpty()) {
+                        level.addFreshEntity(new net.minecraft.world.entity.item.ItemEntity(level,
+                                pos.getX() + 0.5,
+                                pos.getY() + 0.5,
+                                pos.getZ() + 0.5,
+                                leftover));
+                    }
                 }
             }
         }
@@ -179,13 +191,13 @@ public class GeneratorBlockEntity extends AbstractEuInventoryBlockEntity impleme
     }
 
     protected int getFuelValue(ItemStack stack) {
-        if (stack.is(IC2Items.SCRAP.get())) {
-            return 100;
-        }
-        return stack.getBurnTime(RecipeType.SMELTING);
+        return getBaseFuelValue(stack);
     }
 
     protected ItemStack getFuelRemainder(ItemStack stack) {
+        if (stack.is(Items.LAVA_BUCKET)) {
+            return new ItemStack(Items.BUCKET);
+        }
         return stack.getCraftingRemainingItem();
     }
 
@@ -210,6 +222,19 @@ public class GeneratorBlockEntity extends AbstractEuInventoryBlockEntity impleme
     }
 
     public static boolean isFuel(ItemStack stack) {
-        return stack.is(IC2Items.SCRAP.get()) || stack.getBurnTime(RecipeType.SMELTING) > 0 || stack.is(Items.LAVA_BUCKET);
+        return getBaseFuelValue(stack) > 0;
+    }
+
+    private static int getBaseFuelValue(ItemStack stack) {
+        if (stack.isEmpty()) {
+            return 0;
+        }
+        if (stack.is(Items.LAVA_BUCKET)) {
+            return 20000;
+        }
+        if (stack.is(IC2Items.SCRAP.get())) {
+            return 100;
+        }
+        return stack.getBurnTime(RecipeType.SMELTING);
     }
 }

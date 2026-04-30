@@ -163,7 +163,9 @@ public abstract class BaseEnergyStorageBlockEntity extends AbstractEuInventoryBl
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
-        loadInventory(tag.getCompound("inventory"), registries);
+        if (tag.contains("inventory")) {
+            loadInventory(tag.getCompound("inventory"), registries);
+        }
         energyStored = tag.getInt("energyStored");
     }
 

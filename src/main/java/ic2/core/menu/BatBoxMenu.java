@@ -16,6 +16,12 @@ public final class BatBoxMenu extends AbstractContainerMenu {
     private static final int CHARGE_SLOT = 0;
     private static final int DISCHARGE_SLOT = 1;
     private static final int CONTAINER_SLOTS = 2;
+    private static final int MACHINE_SLOT_START = 0;
+    private static final int MACHINE_SLOT_END = CONTAINER_SLOTS;
+    private static final int PLAYER_INV_START = MACHINE_SLOT_END;
+    private static final int PLAYER_INV_END = PLAYER_INV_START + 27;
+    private static final int HOTBAR_START = PLAYER_INV_END;
+    private static final int HOTBAR_END = HOTBAR_START + 9;
 
     private final BaseEnergyStorageBlockEntity blockEntity;
     private final ContainerData data;
@@ -67,9 +73,12 @@ public final class BatBoxMenu extends AbstractContainerMenu {
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
+        if (index < 0 || index >= slots.size()) {
+            return ItemStack.EMPTY;
+        }
+
         ItemStack copied = ItemStack.EMPTY;
         Slot slot = slots.get(index);
-        int containerSlots = 2;
         if (!slot.hasItem()) {
             return ItemStack.EMPTY;
         }
@@ -77,19 +86,23 @@ public final class BatBoxMenu extends AbstractContainerMenu {
         ItemStack stack = slot.getItem();
         copied = stack.copy();
 
-        if (index < CONTAINER_SLOTS) {
-            if (!moveItemStackTo(stack, CONTAINER_SLOTS, slots.size(), false)) {
+        if (index >= MACHINE_SLOT_START && index < MACHINE_SLOT_END) {
+            if (!moveItemStackTo(stack, PLAYER_INV_START, HOTBAR_END, false)) {
                 return ItemStack.EMPTY;
             }
         } else if (blockEntity.isChargeableItem(stack) || blockEntity.isDischargeableItem(stack)) {
             if (!moveEnergyItem(stack)) {
                 return ItemStack.EMPTY;
             }
-        } else if (index < CONTAINER_SLOTS + 27) {
-            if (!moveItemStackTo(stack, CONTAINER_SLOTS + 27, slots.size(), false)) {
+        } else if (index >= PLAYER_INV_START && index < PLAYER_INV_END) {
+            if (!moveItemStackTo(stack, HOTBAR_START, HOTBAR_END, false)) {
                 return ItemStack.EMPTY;
             }
-        } else if (!moveItemStackTo(stack, CONTAINER_SLOTS, CONTAINER_SLOTS + 27, false)) {
+        } else if (index >= HOTBAR_START && index < HOTBAR_END) {
+            if (!moveItemStackTo(stack, PLAYER_INV_START, PLAYER_INV_END, false)) {
+                return ItemStack.EMPTY;
+            }
+        } else {
             return ItemStack.EMPTY;
         }
 

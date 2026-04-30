@@ -57,6 +57,23 @@ public final class ElectricItemManager {
         return electricItem.getTransferLimit();
     }
 
+    public static int getBarWidth(ItemStack stack, int maxCharge) {
+        if (maxCharge <= 0) {
+            return 0;
+        }
+
+        int charge = getCharge(stack);
+        if (charge <= 0) {
+            return 0;
+        }
+
+        if (charge >= maxCharge) {
+            return 13;
+        }
+
+        return Math.min(13, Math.round(13.0F * charge / (float) maxCharge));
+    }
+
     public static int charge(ItemStack stack, int amount) {
         if (!(stack.getItem() instanceof ElectricItem electricItem) || amount <= 0) {
             return 0;

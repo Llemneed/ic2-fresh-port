@@ -34,15 +34,21 @@ public abstract class AbstractInventoryBlockEntity extends BlockEntity {
         }
 
         for (int slot = 0; slot < inventory.getSlots(); slot++) {
-            var stack = inventory.getStackInSlot(slot);
-            if (!stack.isEmpty()) {
+            int count = inventory.getStackInSlot(slot).getCount();
+            if (count > 0) {
+                var extracted = inventory.extractItem(slot, count, false);
+                if (extracted.isEmpty()) {
+                    continue;
+                }
                 level.addFreshEntity(new ItemEntity(level,
                         worldPosition.getX() + 0.5,
                         worldPosition.getY() + 0.5,
                         worldPosition.getZ() + 0.5,
-                        stack.copy()));
+                        extracted));
             }
         }
+
+        setChanged();
     }
 
     protected void saveInventory(CompoundTag tag, HolderLookup.Provider registries) {
@@ -50,10 +56,6 @@ public abstract class AbstractInventoryBlockEntity extends BlockEntity {
     }
 
     protected void loadInventory(CompoundTag inventoryTag, HolderLookup.Provider registries) {
-        if (inventoryTag.isEmpty()) {
-            return;
-        }
-
         inventory.deserializeNBT(registries, inventoryTag);
     }
 }

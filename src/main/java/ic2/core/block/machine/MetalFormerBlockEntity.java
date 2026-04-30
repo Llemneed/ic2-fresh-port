@@ -27,7 +27,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.items.ItemStackHandler;
 
 public final class MetalFormerBlockEntity extends AbstractProcessingMachineBlockEntity implements MenuProvider, EnergyConsumer {
     private static final int SLOT_COUNT = 7;
@@ -123,10 +122,6 @@ public final class MetalFormerBlockEntity extends AbstractProcessingMachineBlock
         blockEntity.tickProcessing(level, pos, state);
     }
 
-    public ItemStackHandler getInventory() {
-        return inventory;
-    }
-
     public ContainerData getData() {
         return data;
     }
@@ -171,7 +166,9 @@ public final class MetalFormerBlockEntity extends AbstractProcessingMachineBlock
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
-        loadInventory(tag.getCompound("inventory"), registries);
+        if (tag.contains("inventory")) {
+            loadInventory(tag.getCompound("inventory"), registries);
+        }
         progress = tag.getInt("progress");
         energyStored = tag.getInt("energy");
         mode = Mode.values()[Mth.clamp(tag.getInt("mode"), 0, Mode.values().length - 1)];
@@ -193,7 +190,7 @@ public final class MetalFormerBlockEntity extends AbstractProcessingMachineBlock
             return new ProcessingOperation(result, dataDrivenRecipe.value().ingredientCount(), 0.0F);
         }
 
-        // TODO(milestone-4): migrate remaining hardcoded metal former recipes to data-driven ic2:metal_forming JSONs.
+        // Legacy fallback is kept temporarily for compatibility while the data-driven layer settles.
         LegacyMetalFormerRecipe legacyRecipe = getLegacyRecipe(input);
         if (legacyRecipe == null) {
             return ProcessingOperation.empty();

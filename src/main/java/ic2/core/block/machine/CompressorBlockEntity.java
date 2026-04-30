@@ -135,7 +135,9 @@ public final class CompressorBlockEntity extends AbstractProcessingMachineBlockE
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
-        loadInventory(tag.getCompound("inventory"), registries);
+        if (tag.contains("inventory")) {
+            loadInventory(tag.getCompound("inventory"), registries);
+        }
         progress = tag.getInt("progress");
         energyStored = tag.getInt("energy");
     }
@@ -160,7 +162,7 @@ public final class CompressorBlockEntity extends AbstractProcessingMachineBlockE
             return new ProcessingOperation(result, recipe.value().ingredientCount(), 0.0F);
         }
 
-        // TODO(milestone-4): keep legacy compressor fallback temporarily for compatibility while expanding JSON coverage further.
+        // Legacy fallback is kept temporarily for compatibility while the data-driven layer settles.
         return getLegacyCompressorOperation(input);
     }
 

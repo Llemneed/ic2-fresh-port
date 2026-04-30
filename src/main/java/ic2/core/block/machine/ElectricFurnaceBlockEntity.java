@@ -121,7 +121,9 @@ public final class ElectricFurnaceBlockEntity extends AbstractProcessingMachineB
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
-        loadInventory(tag.getCompound("inventory"), registries);
+        if (tag.contains("inventory")) {
+            loadInventory(tag.getCompound("inventory"), registries);
+        }
         progress = tag.getInt("progress");
         energyStored = tag.getInt("energy");
         pendingExperience = tag.getFloat("pendingExperience");
