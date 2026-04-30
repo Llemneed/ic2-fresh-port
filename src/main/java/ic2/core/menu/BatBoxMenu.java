@@ -159,7 +159,14 @@ public final class BatBoxMenu extends AbstractContainerMenu {
         int charge = ElectricItemManager.getCharge(stack);
         int maxCharge = ElectricItemManager.getMaxCharge(stack);
 
-        if (canCharge && (!canDischarge || charge < maxCharge)) {
+        // Items that can provide energy should prefer the discharge slot whenever they already contain energy.
+        if (canDischarge && charge > 0) {
+            if (moveItemStackTo(stack, DISCHARGE_SLOT, DISCHARGE_SLOT + 1, false)) {
+                return true;
+            }
+        }
+
+        if (canCharge && charge < maxCharge) {
             if (moveItemStackTo(stack, CHARGE_SLOT, CHARGE_SLOT + 1, false)) {
                 return true;
             }

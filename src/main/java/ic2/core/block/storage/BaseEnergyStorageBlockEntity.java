@@ -2,7 +2,6 @@ package ic2.core.block.storage;
 
 import ic2.core.block.entity.AbstractEuInventoryBlockEntity;
 import ic2.core.energy.EnergyConsumer;
-import ic2.core.energy.EnergyNetHelper;
 import ic2.core.energy.EnergyTier;
 import ic2.core.item.electric.ElectricItemManager;
 import ic2.core.menu.BatBoxMenu;
@@ -247,9 +246,7 @@ public abstract class BaseEnergyStorageBlockEntity extends AbstractEuInventoryBl
         }
 
         Direction outputSide = getBlockState().getValue(EnergyStorageBlock.FACING);
-        int packet = Math.min(outputPerTick, energyStored);
-        int sent = EnergyNetHelper.sendEnergy(level, worldPosition, outputSide, packet, sourceTier);
-        energyStored -= sent;
+        pushEnergyToSide(outputSide, outputPerTick, sourceTier);
     }
 
     private int chargeTarget(net.minecraft.world.item.ItemStack target, int budget) {

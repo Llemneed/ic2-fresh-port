@@ -1,7 +1,6 @@
 package ic2.core.block.generator;
 
 import ic2.core.block.entity.AbstractEuInventoryBlockEntity;
-import ic2.core.energy.EnergyNetHelper;
 import ic2.core.energy.EnergyTier;
 import ic2.core.init.IC2BlockEntities;
 import ic2.core.init.IC2Items;
@@ -9,7 +8,6 @@ import ic2.core.init.IC2Sounds;
 import ic2.core.menu.GeneratorMenu;
 import ic2.core.sound.MachineSoundHelper;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.network.chat.Component;
 import net.minecraft.nbt.CompoundTag;
@@ -206,19 +204,7 @@ public class GeneratorBlockEntity extends AbstractEuInventoryBlockEntity impleme
     }
 
     private void pushEnergy() {
-        if (level == null || energyStored <= 0) {
-            return;
-        }
-
-        for (Direction direction : Direction.values()) {
-            if (energyStored <= 0) {
-                return;
-            }
-
-            int packet = Math.min(outputPerTick, energyStored);
-            int sent = EnergyNetHelper.sendEnergy(level, worldPosition, direction, packet, sourceTier);
-            energyStored -= sent;
-        }
+        pushEnergyToAllSides(outputPerTick, sourceTier);
     }
 
     public static boolean isFuel(ItemStack stack) {
