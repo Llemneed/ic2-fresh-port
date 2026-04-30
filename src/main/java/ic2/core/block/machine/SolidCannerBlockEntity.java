@@ -172,11 +172,11 @@ public final class SolidCannerBlockEntity extends AbstractProcessingMachineBlock
         RecipeHolder<SolidCannerRecipe> recipe = getDataDrivenRecipe(input, canInput);
         if (recipe != null) {
             pendingCanInputCount = Math.max(1, recipe.value().canCount());
-            ItemStack result = recipe.value().assemble(new DualStackRecipeInput(input, canInput), level.registryAccess()).copy();
+            ItemStack result = recipe.value().getResultItem(level.registryAccess()).copy();
             return new ProcessingOperation(result, recipe.value().inputCount(), 0.0F);
         }
 
-        // Legacy fallback is kept temporarily for compatibility while the data-driven layer settles.
+        // Legacy fallback is kept as a compatibility safety net if data-driven recipes are removed or overridden.
         if (!isCannableFood(input) || !isTinCan(canInput)) {
             pendingCanInputCount = 1;
             return ProcessingOperation.empty();

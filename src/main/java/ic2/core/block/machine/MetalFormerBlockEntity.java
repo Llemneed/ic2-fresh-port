@@ -186,11 +186,11 @@ public final class MetalFormerBlockEntity extends AbstractProcessingMachineBlock
     protected ProcessingOperation getProcessingOperation(ItemStack input) {
         RecipeHolder<MetalFormerRecipe> dataDrivenRecipe = getDataDrivenRecipe(input);
         if (dataDrivenRecipe != null) {
-            ItemStack result = dataDrivenRecipe.value().assemble(new SingleRecipeInput(input), level.registryAccess()).copy();
+            ItemStack result = dataDrivenRecipe.value().getResultItem(level.registryAccess()).copy();
             return new ProcessingOperation(result, dataDrivenRecipe.value().ingredientCount(), 0.0F);
         }
 
-        // Legacy fallback is kept temporarily for compatibility while the data-driven layer settles.
+        // Legacy fallback is kept as a compatibility safety net if data-driven recipes are removed or overridden.
         LegacyMetalFormerRecipe legacyRecipe = getLegacyRecipe(input);
         if (legacyRecipe == null) {
             return ProcessingOperation.empty();

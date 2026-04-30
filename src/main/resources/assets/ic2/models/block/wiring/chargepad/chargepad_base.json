@@ -3,16 +3,28 @@
 		"particle": "#north"
 	},
 	"elements": [
-		{   
+		{
 			"from": [ 0, 0, 0 ],
-			"to": [ 16, 15, 16 ],
+			"to": [ 16, 12, 16 ],
 			"faces": {
 				"down": { "texture": "#down", "cullface": "down" },
-				"up": { "texture": "#up" },
+				"up": { "texture": "#north" },
 				"north": { "texture": "#north", "cullface": "north" },
 				"south": { "texture": "#south", "cullface": "south" },
 				"west": { "texture": "#west", "cullface": "west" },
 				"east": { "texture": "#east", "cullface": "east" }
+			}
+		},
+		{
+			"from": [ 1, 12, 1 ],
+			"to": [ 15, 16, 15 ],
+			"faces": {
+				"down": { "texture": "#north" },
+				"up": { "texture": "#up" },
+				"north": { "texture": "#north" },
+				"south": { "texture": "#south" },
+				"west": { "texture": "#west" },
+				"east": { "texture": "#east" }
 			}
 		}
 	]

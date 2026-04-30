@@ -166,11 +166,11 @@ public final class MaceratorBlockEntity extends AbstractProcessingMachineBlockEn
 
         RecipeHolder<MaceratorRecipe> recipe = getDataDrivenRecipe(input);
         if (recipe != null) {
-            ItemStack result = recipe.value().assemble(new SingleRecipeInput(input), level.registryAccess()).copy();
+            ItemStack result = recipe.value().getResultItem(level.registryAccess()).copy();
             return new ProcessingOperation(result, 1, recipe.value().experience());
         }
 
-        // TODO: migrate remaining hardcoded recipes to data-driven ic2:macerating JSONs.
+        // Legacy fallback is kept as a compatibility safety net if data-driven recipes are removed or overridden.
         return getLegacyMaceratorOperation(input);
     }
 

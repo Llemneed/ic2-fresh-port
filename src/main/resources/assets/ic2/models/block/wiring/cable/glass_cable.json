@@ -1,7 +1,32 @@
-﻿{
-	"parent": "block/cube_all",
+{
 	"textures": {
-		"all": "ic2:block/wiring/cable/glass_cable_light_gray"
-	}
+		"all": "ic2:block/wiring/cable/glass_cable_light_gray",
+		"particle": "ic2:block/wiring/cable/glass_cable_light_gray"
+	},
+	"elements": [
+		{
+			"from": [ 0, 7, 7 ],
+			"to": [ 16, 9, 9 ],
+			"faces": {
+				"down": { "texture": "#all" },
+				"up": { "texture": "#all" },
+				"north": { "texture": "#all" },
+				"south": { "texture": "#all" },
+				"west": { "texture": "#all" },
+				"east": { "texture": "#all" }
+			}
+		},
+		{
+			"from": [ 7, 7, 0 ],
+			"to": [ 9, 9, 16 ],
+			"faces": {
+				"down": { "texture": "#all" },
+				"up": { "texture": "#all" },
+				"north": { "texture": "#all" },
+				"south": { "texture": "#all" },
+				"west": { "texture": "#all" },
+				"east": { "texture": "#all" }
+			}
+		}
+	]
 }
-

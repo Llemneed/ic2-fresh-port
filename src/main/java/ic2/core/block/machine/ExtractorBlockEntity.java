@@ -141,11 +141,11 @@ public final class ExtractorBlockEntity extends AbstractProcessingMachineBlockEn
 
         RecipeHolder<ExtractorRecipe> recipe = getDataDrivenRecipe(input);
         if (recipe != null) {
-            ItemStack result = recipe.value().assemble(new SingleRecipeInput(input), level.registryAccess()).copy();
+            ItemStack result = recipe.value().getResultItem(level.registryAccess()).copy();
             return new ProcessingOperation(result, recipe.value().ingredientCount(), 0.0F);
         }
 
-        // Legacy fallback is kept temporarily for compatibility while the data-driven layer settles.
+        // Legacy fallback is kept as a compatibility safety net if data-driven recipes are removed or overridden.
         return getLegacyExtractorOperation(input);
     }
 

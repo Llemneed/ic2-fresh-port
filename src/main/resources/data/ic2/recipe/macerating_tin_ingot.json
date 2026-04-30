@@ -1,0 +1,12 @@
+{
+  "type": "ic2:macerating",
+  "ingredient": {
+    "item": "ic2:tin_ingot"
+  },
+  "result": {
+    "id": "ic2:tin_dust",
+    "count": 1
+  },
+  "experience": 0.1,
+  "energy": 400
+}
