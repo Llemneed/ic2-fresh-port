@@ -1,12 +1,13 @@
 package ic2.core.item.electric;
 
+import ic2.core.init.IC2DataComponents;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 
 public final class ElectricItemManager {
-    private static final String CHARGE_KEY = "Charge";
+    private static final String LEGACY_CHARGE_KEY = "Charge";
 
     private ElectricItemManager() {
     }
@@ -28,12 +29,16 @@ public final class ElectricItemManager {
     }
 
     public static int getCharge(ItemStack stack) {
-        if (!(stack.getItem() instanceof ElectricItem)) {
+        if (!(stack.getItem() instanceof ElectricItem electricItem)) {
             return 0;
         }
 
-        CustomData customData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
-        return Math.max(0, customData.copyTag().getInt(CHARGE_KEY));
+        Integer stored = stack.get(IC2DataComponents.ENERGY_STORED.get());
+        if (stored != null) {
+            return clampCharge(stored, electricItem.getMaxCharge());
+        }
+
+        return readLegacyCharge(stack, electricItem);
     }
 
     public static int getMaxCharge(ItemStack stack) {
@@ -109,9 +114,38 @@ public final class ElectricItemManager {
             return;
         }
 
-        int clampedCharge = Math.max(0, Math.min(charge, electricItem.getMaxCharge()));
-        CompoundTag tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
-        tag.putInt(CHARGE_KEY, clampedCharge);
-        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        int clampedCharge = clampCharge(charge, electricItem.getMaxCharge());
+        stack.set(IC2DataComponents.ENERGY_STORED.get(), clampedCharge);
+        clearLegacyCharge(stack);
+    }
+
+    private static int readLegacyCharge(ItemStack stack, ElectricItem electricItem) {
+        CustomData customData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+        int legacyCharge = clampCharge(customData.copyTag().getInt(LEGACY_CHARGE_KEY), electricItem.getMaxCharge());
+        if (legacyCharge > 0) {
+            // TODO(milestone-3): Remove legacy CUSTOM_DATA charge migration after old stacks are no longer relevant.
+            stack.set(IC2DataComponents.ENERGY_STORED.get(), legacyCharge);
+            clearLegacyCharge(stack);
+        }
+        return legacyCharge;
+    }
+
+    private static void clearLegacyCharge(ItemStack stack) {
+        CustomData customData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+        CompoundTag tag = customData.copyTag();
+        if (!tag.contains(LEGACY_CHARGE_KEY)) {
+            return;
+        }
+
+        tag.remove(LEGACY_CHARGE_KEY);
+        if (tag.isEmpty()) {
+            stack.remove(DataComponents.CUSTOM_DATA);
+        } else {
+            stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        }
+    }
+
+    private static int clampCharge(int charge, int maxCharge) {
+        return Math.max(0, Math.min(charge, maxCharge));
     }
 }

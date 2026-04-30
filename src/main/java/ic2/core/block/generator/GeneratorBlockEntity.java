@@ -1,5 +1,6 @@
 package ic2.core.block.generator;
 
+import ic2.core.block.entity.AbstractEuInventoryBlockEntity;
 import ic2.core.energy.EnergyNetHelper;
 import ic2.core.energy.EnergyTier;
 import ic2.core.init.IC2BlockEntities;
@@ -14,7 +15,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.MenuProvider;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -24,21 +24,12 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.neoforged.neoforge.items.ItemStackHandler;
 
-public class GeneratorBlockEntity extends BlockEntity implements MenuProvider {
+public class GeneratorBlockEntity extends AbstractEuInventoryBlockEntity implements MenuProvider {
     private static final int FUEL_SLOT = 0;
-
-    private final ItemStackHandler inventory = new ItemStackHandler(1) {
-        @Override
-        protected void onContentsChanged(int slot) {
-            setChanged();
-        }
-    };
 
     private final ContainerData data = new ContainerData() {
         @Override
@@ -76,7 +67,6 @@ public class GeneratorBlockEntity extends BlockEntity implements MenuProvider {
     private final String displayKey;
     private int burnTime;
     private int burnTimeTotal;
-    private int energyStored;
 
     public GeneratorBlockEntity(BlockPos pos, BlockState blockState) {
         this(IC2BlockEntities.GENERATOR.get(), pos, blockState, 10, 4000, 16, "block.ic2.generator");
@@ -91,7 +81,7 @@ public class GeneratorBlockEntity extends BlockEntity implements MenuProvider {
             int outputPerTick,
             String displayKey
     ) {
-        super(type, pos, blockState);
+        super(type, pos, blockState, 1);
         this.energyPerTick = energyPerTick;
         this.maxEnergy = maxEnergy;
         this.outputPerTick = outputPerTick;
@@ -103,23 +93,8 @@ public class GeneratorBlockEntity extends BlockEntity implements MenuProvider {
         blockEntity.serverTickInternal(level, pos, state);
     }
 
-    public ItemStackHandler getInventory() {
-        return inventory;
-    }
-
     public ContainerData getData() {
         return data;
-    }
-
-    public void dropContents() {
-        if (level == null || level.isClientSide) {
-            return;
-        }
-
-        ItemStack stack = inventory.getStackInSlot(FUEL_SLOT);
-        if (!stack.isEmpty()) {
-            level.addFreshEntity(new ItemEntity(level, worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5, stack.copy()));
-        }
     }
 
     @Override
@@ -135,7 +110,7 @@ public class GeneratorBlockEntity extends BlockEntity implements MenuProvider {
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
-        tag.put("inventory", inventory.serializeNBT(registries));
+        saveInventory(tag, registries);
         tag.putInt("burnTime", burnTime);
         tag.putInt("burnTimeTotal", burnTimeTotal);
         tag.putInt("energyStored", energyStored);
@@ -144,10 +119,25 @@ public class GeneratorBlockEntity extends BlockEntity implements MenuProvider {
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
-        inventory.deserializeNBT(registries, tag.getCompound("inventory"));
+        loadInventory(tag.getCompound("inventory"), registries);
         burnTime = tag.getInt("burnTime");
         burnTimeTotal = tag.getInt("burnTimeTotal");
         energyStored = tag.getInt("energyStored");
+    }
+
+    @Override
+    public int getMaxEnergyStored() {
+        return maxEnergy;
+    }
+
+    @Override
+    public int receiveEnergy(int amount) {
+        return 0;
+    }
+
+    @Override
+    public boolean canReceiveEnergy() {
+        return false;
     }
 
     public boolean isFuelItem(ItemStack stack) {

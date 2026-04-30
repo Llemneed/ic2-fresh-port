@@ -17,7 +17,6 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.MenuProvider;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -30,7 +29,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.items.ItemStackHandler;
 
 public final class CompressorBlockEntity extends AbstractProcessingMachineBlockEntity implements MenuProvider, EnergyConsumer {
     private static final int SLOT_COUNT = 7;
@@ -67,7 +65,7 @@ public final class CompressorBlockEntity extends AbstractProcessingMachineBlockE
         public int get(int index) {
             return switch (index) {
                 case 0 -> progress;
-                case 1 -> getMaxProgress();
+                case 1 -> getOperationMaxProgress();
                 case 2 -> energyStored;
                 case 3 -> getMaxEnergyStored();
                 default -> 0;
@@ -109,59 +107,11 @@ public final class CompressorBlockEntity extends AbstractProcessingMachineBlockE
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, CompressorBlockEntity blockEntity) {
-        blockEntity.consumeChargeItem();
-
-        ItemStack input = blockEntity.inventory.getStackInSlot(INPUT_SLOT);
-        ItemStack result = blockEntity.getCompressorResult(input);
-        int energyPerTick = blockEntity.getEnergyPerTick();
-        int maxProgress = blockEntity.getMaxProgress();
-        boolean canProcess = blockEntity.canWorkWithRedstone()
-                && !result.isEmpty()
-                && blockEntity.canOutput(result)
-                && blockEntity.energyStored >= energyPerTick;
-
-        if (canProcess) {
-            blockEntity.energyStored -= energyPerTick;
-            blockEntity.progress++;
-            MachineSoundHelper.playPeriodic(level, pos, IC2Sounds.COMPRESSOR_OPERATING.get());
-
-            if (blockEntity.progress >= maxProgress) {
-                blockEntity.progress = 0;
-                blockEntity.process(input.copy(), result.copy());
-            }
-        } else if (blockEntity.progress != 0) {
-            blockEntity.progress = 0;
-        }
-
-        boolean active = canProcess;
-        if (state.getBlock() instanceof CompressorBlock && state.getValue(CompressorBlock.ACTIVE) != active) {
-            level.setBlock(pos, state.setValue(CompressorBlock.ACTIVE, active), Block.UPDATE_CLIENTS);
-        }
-
-        if (canProcess || blockEntity.progress == 0) {
-            setChanged(level, pos, state);
-        }
-    }
-
-    public ItemStackHandler getInventory() {
-        return inventory;
+        blockEntity.tickProcessing(level, pos, state);
     }
 
     public ContainerData getData() {
         return data;
-    }
-
-    public void dropContents() {
-        if (level == null || level.isClientSide) {
-            return;
-        }
-
-        for (int slot = 0; slot < inventory.getSlots(); slot++) {
-            ItemStack stack = inventory.getStackInSlot(slot);
-            if (!stack.isEmpty()) {
-                level.addFreshEntity(new ItemEntity(level, worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5, stack.copy()));
-            }
-        }
     }
 
     @Override
@@ -191,58 +141,27 @@ public final class CompressorBlockEntity extends AbstractProcessingMachineBlockE
     }
 
     public boolean hasRecipe(ItemStack input) {
-        return !getCompressorResult(input).isEmpty();
+        return !getProcessingOperation(input).isEmpty();
     }
 
     public boolean isUpgrade(ItemStack stack) {
         return getUpgradeType(stack) != null;
     }
 
-    private void process(ItemStack input, ItemStack result) {
-        inventory.extractItem(INPUT_SLOT, getIngredientCount(input), false);
-        ItemStack output = inventory.getStackInSlot(OUTPUT_SLOT);
-
-        if (output.isEmpty()) {
-            inventory.setStackInSlot(OUTPUT_SLOT, result);
-        } else {
-            output.grow(result.getCount());
-            inventory.setStackInSlot(OUTPUT_SLOT, output);
-        }
-    }
-
-    private boolean canOutput(ItemStack result) {
-        ItemStack output = inventory.getStackInSlot(OUTPUT_SLOT);
-        if (output.isEmpty()) {
-            return true;
-        }
-        if (!ItemStack.isSameItemSameComponents(output, result)) {
-            return false;
-        }
-        return output.getCount() + result.getCount() <= output.getMaxStackSize();
-    }
-
-    private ItemStack getCompressorResult(ItemStack input) {
+    @Override
+    protected ProcessingOperation getProcessingOperation(ItemStack input) {
         if (input.isEmpty()) {
-            return ItemStack.EMPTY;
+            return ProcessingOperation.empty();
         }
 
         RecipeHolder<CompressorRecipe> recipe = getDataDrivenRecipe(input);
         if (recipe != null) {
-            return recipe.value().assemble(new SingleRecipeInput(input), level.registryAccess()).copy();
+            ItemStack result = recipe.value().assemble(new SingleRecipeInput(input), level.registryAccess()).copy();
+            return new ProcessingOperation(result, recipe.value().ingredientCount(), 0.0F);
         }
 
-        // TODO: migrate any remaining hardcoded compressor recipes to ic2:compressing JSONs.
-        return getLegacyCompressorResult(input);
-    }
-
-    private int getIngredientCount(ItemStack input) {
-        RecipeHolder<CompressorRecipe> recipe = getDataDrivenRecipe(input);
-        if (recipe != null) {
-            return recipe.value().ingredientCount();
-        }
-
-        LegacyCompressorRecipe legacyRecipe = getLegacyRecipe(input);
-        return legacyRecipe != null ? legacyRecipe.inputCount : 1;
+        // TODO(milestone-4): keep legacy compressor fallback temporarily for compatibility while expanding JSON coverage further.
+        return getLegacyCompressorOperation(input);
     }
 
     private LegacyCompressorRecipe getLegacyRecipe(ItemStack input) {
@@ -254,9 +173,11 @@ public final class CompressorBlockEntity extends AbstractProcessingMachineBlockE
         return null;
     }
 
-    private ItemStack getLegacyCompressorResult(ItemStack input) {
+    private ProcessingOperation getLegacyCompressorOperation(ItemStack input) {
         LegacyCompressorRecipe recipe = getLegacyRecipe(input);
-        return recipe != null ? recipe.output.copy() : ItemStack.EMPTY;
+        return recipe != null
+                ? new ProcessingOperation(recipe.output.copy(), recipe.inputCount, 0.0F)
+                : ProcessingOperation.empty();
     }
 
     private RecipeHolder<CompressorRecipe> getDataDrivenRecipe(ItemStack input) {
@@ -269,11 +190,25 @@ public final class CompressorBlockEntity extends AbstractProcessingMachineBlockE
                 .orElse(null);
     }
 
-    private int getMaxProgress() {
+    @Override
+    protected int getOperationMaxProgress() {
         return scaledProgress(BASE_MAX_PROGRESS, 30);
     }
 
-    private int getEnergyPerTick() {
+    @Override
+    protected int getOperationEnergyPerTick() {
         return scaledEnergyPerTick(BASE_ENERGY_PER_TICK);
+    }
+
+    @Override
+    protected void playProcessingSound(Level level, BlockPos pos) {
+        MachineSoundHelper.playPeriodic(level, pos, IC2Sounds.COMPRESSOR_OPERATING.get());
+    }
+
+    @Override
+    protected void updateActiveState(Level level, BlockPos pos, BlockState state, boolean active) {
+        if (state.getBlock() instanceof CompressorBlock && state.getValue(CompressorBlock.ACTIVE) != active) {
+            level.setBlock(pos, state.setValue(CompressorBlock.ACTIVE, active), Block.UPDATE_CLIENTS);
+        }
     }
 }

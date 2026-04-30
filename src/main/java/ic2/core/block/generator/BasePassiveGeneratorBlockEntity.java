@@ -1,12 +1,11 @@
 package ic2.core.block.generator;
 
+import ic2.core.block.entity.AbstractEuBlockEntity;
 import ic2.core.energy.EnergyNetHelper;
 import ic2.core.energy.EnergyTier;
 import ic2.core.sound.MachineSoundHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.MenuProvider;
@@ -14,16 +13,14 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
-public abstract class BasePassiveGeneratorBlockEntity extends BlockEntity implements MenuProvider {
+public abstract class BasePassiveGeneratorBlockEntity extends AbstractEuBlockEntity implements MenuProvider {
     private final int maxEnergy;
     private final int outputPerTick;
     private final EnergyTier sourceTier;
     private final String displayKey;
-    protected int energyStored;
 
     protected BasePassiveGeneratorBlockEntity(
             BlockEntityType<?> type,
@@ -82,20 +79,23 @@ public abstract class BasePassiveGeneratorBlockEntity extends BlockEntity implem
     }
 
     @Override
+    public int getMaxEnergyStored() {
+        return maxEnergy;
+    }
+
+    @Override
+    public int receiveEnergy(int amount) {
+        return 0;
+    }
+
+    @Override
+    public boolean canReceiveEnergy() {
+        return false;
+    }
+
+    @Override
     public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
         return null;
-    }
-
-    @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
-        tag.putInt("energyStored", energyStored);
-    }
-
-    @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        energyStored = tag.getInt("energyStored");
     }
 
     public void dropContents() {

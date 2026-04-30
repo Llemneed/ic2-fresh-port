@@ -39,6 +39,26 @@ public final class IC2RecipeTypes {
             }
     );
 
+    public static final DeferredHolder<RecipeType<?>, RecipeType<MetalFormerRecipe>> METAL_FORMING = RECIPE_TYPES.register(
+            "metal_forming",
+            () -> new RecipeType<>() {
+                @Override
+                public String toString() {
+                    return IC2.MODID + ":metal_forming";
+                }
+            }
+    );
+
+    public static final DeferredHolder<RecipeType<?>, RecipeType<SolidCannerRecipe>> SOLID_CANNING = RECIPE_TYPES.register(
+            "solid_canning",
+            () -> new RecipeType<>() {
+                @Override
+                public String toString() {
+                    return IC2.MODID + ":solid_canning";
+                }
+            }
+    );
+
     private IC2RecipeTypes() {
     }
 }

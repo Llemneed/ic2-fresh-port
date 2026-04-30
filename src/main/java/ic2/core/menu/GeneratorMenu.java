@@ -12,6 +12,9 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.SlotItemHandler;
 
 public final class GeneratorMenu extends AbstractContainerMenu {
+    private static final int FUEL_SLOT = 0;
+    private static final int CONTAINER_SLOTS = 1;
+
     private final GeneratorBlockEntity blockEntity;
     private final ContainerData data;
 
@@ -62,20 +65,20 @@ public final class GeneratorMenu extends AbstractContainerMenu {
         ItemStack stack = slot.getItem();
         copied = stack.copy();
 
-        if (index == 0) {
-            if (!moveItemStackTo(stack, 1, 37, false)) {
+        if (index == FUEL_SLOT) {
+            if (!moveItemStackTo(stack, CONTAINER_SLOTS, slots.size(), false)) {
                 return ItemStack.EMPTY;
             }
         } else if (blockEntity.isFuelItem(stack)) {
-            if (!moveItemStackTo(stack, 0, 1, false)) {
+            if (!moveItemStackTo(stack, FUEL_SLOT, FUEL_SLOT + 1, false)) {
                 return ItemStack.EMPTY;
             }
         } else {
-            if (index < 28) {
-                if (!moveItemStackTo(stack, 28, 37, false)) {
+            if (index < CONTAINER_SLOTS + 27) {
+                if (!moveItemStackTo(stack, CONTAINER_SLOTS + 27, slots.size(), false)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (!moveItemStackTo(stack, 1, 28, false)) {
+            } else if (!moveItemStackTo(stack, CONTAINER_SLOTS, CONTAINER_SLOTS + 27, false)) {
                 return ItemStack.EMPTY;
             }
         }

@@ -28,7 +28,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.items.ItemStackHandler;
 
 public final class RecyclerBlockEntity extends AbstractProcessingMachineBlockEntity implements MenuProvider, EnergyConsumer {
     private static final int SLOT_COUNT = 7;
@@ -50,7 +49,7 @@ public final class RecyclerBlockEntity extends AbstractProcessingMachineBlockEnt
         public int get(int index) {
             return switch (index) {
                 case 0 -> progress;
-                case 1 -> getMaxProgress();
+                case 1 -> getOperationMaxProgress();
                 case 2 -> energyStored;
                 case 3 -> getMaxEnergyStored();
                 default -> 0;
@@ -92,41 +91,7 @@ public final class RecyclerBlockEntity extends AbstractProcessingMachineBlockEnt
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, RecyclerBlockEntity blockEntity) {
-        blockEntity.consumeChargeItem();
-
-        ItemStack input = blockEntity.inventory.getStackInSlot(INPUT_SLOT);
-        int energyPerTick = blockEntity.getEnergyPerTick();
-        int maxProgress = blockEntity.getMaxProgress();
-        boolean canProcess = blockEntity.canWorkWithRedstone()
-                && blockEntity.canRecycle(input)
-                && blockEntity.canOutput()
-                && blockEntity.energyStored >= energyPerTick;
-
-        if (canProcess) {
-            blockEntity.energyStored -= energyPerTick;
-            blockEntity.progress++;
-            MachineSoundHelper.playPeriodic(level, pos, IC2Sounds.RECYCLER_OPERATING.get());
-
-            if (blockEntity.progress >= maxProgress) {
-                blockEntity.progress = 0;
-                blockEntity.process();
-            }
-        } else if (blockEntity.progress != 0) {
-            blockEntity.progress = 0;
-        }
-
-        boolean active = canProcess;
-        if (state.getBlock() instanceof RecyclerBlock && state.getValue(RecyclerBlock.ACTIVE) != active) {
-            level.setBlock(pos, state.setValue(RecyclerBlock.ACTIVE, active), Block.UPDATE_CLIENTS);
-        }
-
-        if (canProcess || blockEntity.progress == 0) {
-            setChanged(level, pos, state);
-        }
-    }
-
-    public ItemStackHandler getInventory() {
-        return inventory;
+        blockEntity.tickProcessing(level, pos, state);
     }
 
     public ContainerData getData() {
@@ -160,29 +125,53 @@ public final class RecyclerBlockEntity extends AbstractProcessingMachineBlockEnt
     }
 
     public boolean hasRecipe(ItemStack input) {
-        return canRecycle(input);
+        return !getProcessingOperation(input).isEmpty();
     }
 
     public boolean isUpgrade(ItemStack stack) {
         return getUpgradeType(stack) != null;
     }
 
-    private void process() {
-        inventory.extractItem(INPUT_SLOT, 1, false);
+    @Override
+    protected ProcessingOperation getProcessingOperation(ItemStack input) {
+        if (!canRecycle(input) || !canOutput()) {
+            return ProcessingOperation.empty();
+        }
+        return new ProcessingOperation(new ItemStack(IC2Items.SCRAP.get()), 1, 0.0F);
+    }
+
+    @Override
+    protected void completeProcessing(ItemStack input, ProcessingOperation operation) {
+        consumeInputsForOperation(operation);
         RandomSource random = level != null ? level.random : RandomSource.create();
         float chance = BASE_SCRAP_CHANCE + getUpgradeCount(UpgradeType.OVERCLOCKER) * 0.01F;
         if (random.nextFloat() > chance) {
             return;
         }
 
-        ItemStack output = inventory.getStackInSlot(OUTPUT_SLOT);
-        if (output.isEmpty()) {
-            inventory.setStackInSlot(OUTPUT_SLOT, new ItemStack(IC2Items.SCRAP.get()));
-            return;
-        }
+        insertOperationResult(operation);
+    }
 
-        output.grow(1);
-        inventory.setStackInSlot(OUTPUT_SLOT, output);
+    @Override
+    protected int getOperationMaxProgress() {
+        return scaledProgress(BASE_MAX_PROGRESS, 12);
+    }
+
+    @Override
+    protected int getOperationEnergyPerTick() {
+        return scaledEnergyPerTick(BASE_ENERGY_PER_TICK);
+    }
+
+    @Override
+    protected void playProcessingSound(Level level, BlockPos pos) {
+        MachineSoundHelper.playPeriodic(level, pos, IC2Sounds.RECYCLER_OPERATING.get());
+    }
+
+    @Override
+    protected void updateActiveState(Level level, BlockPos pos, BlockState state, boolean active) {
+        if (state.getBlock() instanceof RecyclerBlock && state.getValue(RecyclerBlock.ACTIVE) != active) {
+            level.setBlock(pos, state.setValue(RecyclerBlock.ACTIVE, active), Block.UPDATE_CLIENTS);
+        }
     }
 
     private boolean canRecycle(ItemStack input) {
@@ -208,13 +197,5 @@ public final class RecyclerBlockEntity extends AbstractProcessingMachineBlockEnt
     private boolean canOutput() {
         ItemStack output = inventory.getStackInSlot(OUTPUT_SLOT);
         return output.isEmpty() || (output.is(IC2Items.SCRAP.get()) && output.getCount() < output.getMaxStackSize());
-    }
-
-    private int getMaxProgress() {
-        return scaledProgress(BASE_MAX_PROGRESS, 12);
-    }
-
-    private int getEnergyPerTick() {
-        return scaledEnergyPerTick(BASE_ENERGY_PER_TICK);
     }
 }

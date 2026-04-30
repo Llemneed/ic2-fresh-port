@@ -8,16 +8,17 @@ import ic2.core.init.IC2Items;
 import ic2.core.init.IC2Sounds;
 import ic2.core.item.upgrade.MachineUpgradeItem.UpgradeType;
 import ic2.core.menu.MaceratorMenu;
+import ic2.core.recipe.IC2RecipeTypes;
 import ic2.core.recipe.MaceratorRecipe;
 import ic2.core.sound.MachineSoundHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.ExperienceOrb;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -30,7 +31,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.nbt.CompoundTag;
 
 public final class MaceratorBlockEntity extends AbstractProcessingMachineBlockEntity implements MenuProvider, EnergyConsumer {
     private static final int SLOT_COUNT = 7;
@@ -51,7 +51,7 @@ public final class MaceratorBlockEntity extends AbstractProcessingMachineBlockEn
         public int get(int index) {
             return switch (index) {
                 case 0 -> progress;
-                case 1 -> getMaxProgress();
+                case 1 -> getOperationMaxProgress();
                 case 2 -> energyStored;
                 case 3 -> getMaxEnergyStored();
                 default -> 0;
@@ -95,48 +95,19 @@ public final class MaceratorBlockEntity extends AbstractProcessingMachineBlockEn
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, MaceratorBlockEntity blockEntity) {
-        blockEntity.consumeChargeItem();
-
-        ItemStack input = blockEntity.inventory.getStackInSlot(INPUT_SLOT);
-        ItemStack result = blockEntity.getMaceratorResult(input);
-        int energyPerTick = blockEntity.getEnergyPerTick();
-        int maxProgress = blockEntity.getMaxProgress();
-        boolean canProcess = blockEntity.canWorkWithRedstone()
-                && !result.isEmpty()
-                && blockEntity.canOutput(result)
-                && blockEntity.energyStored >= energyPerTick;
-
-        if (canProcess) {
-            blockEntity.energyStored -= energyPerTick;
-            blockEntity.progress++;
-            MachineSoundHelper.playPeriodic(level, pos, IC2Sounds.MACERATOR_OPERATING.get());
-
-            if (blockEntity.progress >= maxProgress) {
-                blockEntity.progress = 0;
-                blockEntity.process(input.copy(), result.copy());
-            }
-        } else if (blockEntity.progress != 0) {
-            blockEntity.progress = 0;
-        }
-
-        boolean active = canProcess;
-        if (state.getBlock() instanceof MaceratorBlock && state.getValue(MaceratorBlock.ACTIVE) != active) {
-            level.setBlock(pos, state.setValue(MaceratorBlock.ACTIVE, active), Block.UPDATE_CLIENTS);
-        }
-
-        if (canProcess || blockEntity.progress == 0) {
-            setChanged(level, pos, state);
-        }
+        blockEntity.tickProcessing(level, pos, state);
     }
 
     public ContainerData getData() {
         return data;
     }
 
+    @Override
     public Component getDisplayName() {
         return Component.translatable("block.ic2.macerator");
     }
 
+    @Override
     public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
         return new MaceratorMenu(containerId, playerInventory, this, data);
     }
@@ -160,7 +131,7 @@ public final class MaceratorBlockEntity extends AbstractProcessingMachineBlockEn
     }
 
     public boolean hasRecipe(ItemStack input) {
-        return !getMaceratorResult(input).isEmpty();
+        return !getProcessingOperation(input).isEmpty();
     }
 
     public boolean isUpgrade(ItemStack stack) {
@@ -185,151 +156,105 @@ public final class MaceratorBlockEntity extends AbstractProcessingMachineBlockEn
         }
     }
 
-    private void process(ItemStack input, ItemStack result) {
-        inventory.extractItem(INPUT_SLOT, 1, false);
-        ItemStack output = inventory.getStackInSlot(OUTPUT_SLOT);
-        pendingExperience += getExperienceForInput(input);
-
-        if (output.isEmpty()) {
-            inventory.setStackInSlot(OUTPUT_SLOT, result);
-        } else {
-            output.grow(result.getCount());
-            inventory.setStackInSlot(OUTPUT_SLOT, output);
-        }
-    }
-
-    private boolean canOutput(ItemStack result) {
-        ItemStack output = inventory.getStackInSlot(OUTPUT_SLOT);
-        if (output.isEmpty()) {
-            return true;
-        }
-
-        if (!ItemStack.isSameItemSameComponents(output, result)) {
-            return false;
-        }
-
-        return output.getCount() + result.getCount() <= output.getMaxStackSize();
-    }
-
-    private ItemStack getMaceratorResult(ItemStack input) {
+    @Override
+    protected ProcessingOperation getProcessingOperation(ItemStack input) {
         if (input.isEmpty()) {
-            return ItemStack.EMPTY;
+            return ProcessingOperation.empty();
         }
 
         RecipeHolder<MaceratorRecipe> recipe = getDataDrivenRecipe(input);
         if (recipe != null) {
-            return recipe.value().assemble(new SingleRecipeInput(input), level.registryAccess()).copy();
+            ItemStack result = recipe.value().assemble(new SingleRecipeInput(input), level.registryAccess()).copy();
+            return new ProcessingOperation(result, 1, recipe.value().experience());
         }
 
         // TODO: migrate remaining hardcoded recipes to data-driven ic2:macerating JSONs.
-        return getLegacyMaceratorResult(input);
+        return getLegacyMaceratorOperation(input);
     }
 
-    private ItemStack getLegacyMaceratorResult(ItemStack input) {
-        if (input.is(IC2Blocks.LEAD_ORE.asItem())) {
-            return new ItemStack(IC2Items.LEAD_DUST.get(), 2);
-        }
-
-        if (input.is(IC2Blocks.TIN_ORE.asItem())) {
-            return new ItemStack(IC2Items.TIN_DUST.get(), 2);
-        }
-
-        if (input.is(Blocks.COPPER_ORE.asItem()) || input.is(Blocks.DEEPSLATE_COPPER_ORE.asItem())) {
-            return new ItemStack(IC2Items.COPPER_DUST.get(), 2);
-        }
-
-        if (input.is(Blocks.IRON_ORE.asItem()) || input.is(Blocks.DEEPSLATE_IRON_ORE.asItem())) {
-            return new ItemStack(IC2Items.IRON_DUST.get(), 2);
-        }
-
-        if (input.is(Blocks.GOLD_ORE.asItem()) || input.is(Blocks.DEEPSLATE_GOLD_ORE.asItem())) {
-            return new ItemStack(IC2Items.GOLD_DUST.get(), 2);
-        }
-
-        if (input.is(Items.RAW_COPPER)) {
-            return new ItemStack(IC2Items.COPPER_DUST.get(), 2);
-        }
-
-        if (input.is(Items.RAW_IRON)) {
-            return new ItemStack(IC2Items.IRON_DUST.get(), 2);
-        }
-
-        if (input.is(Items.RAW_GOLD)) {
-            return new ItemStack(IC2Items.GOLD_DUST.get(), 2);
-        }
-
-        if (input.is(Blocks.COBBLESTONE.asItem())) {
-            return new ItemStack(Blocks.SAND);
-        }
-
-        if (input.is(Blocks.GRAVEL.asItem())) {
-            return new ItemStack(Items.FLINT);
-        }
-
-        if (input.is(IC2Items.LEAD_INGOT.get())) {
-            return new ItemStack(IC2Items.LEAD_DUST.get());
-        }
-
-        if (input.is(IC2Items.TIN_INGOT.get())) {
-            return new ItemStack(IC2Items.TIN_DUST.get());
-        }
-
-        if (input.is(Blocks.COPPER_BLOCK.asItem())) {
-            return new ItemStack(IC2Items.COPPER_DUST.get(), 9);
-        }
-
-        if (input.is(Items.COPPER_INGOT)) {
-            return new ItemStack(IC2Items.COPPER_DUST.get());
-        }
-
-        if (input.is(Items.IRON_INGOT)) {
-            return new ItemStack(IC2Items.IRON_DUST.get());
-        }
-
-        if (input.is(Items.GOLD_INGOT)) {
-            return new ItemStack(IC2Items.GOLD_DUST.get());
-        }
-
-        if (input.is(Blocks.IRON_BLOCK.asItem())) {
-            return new ItemStack(IC2Items.IRON_DUST.get(), 9);
-        }
-
-        if (input.is(Blocks.GOLD_BLOCK.asItem())) {
-            return new ItemStack(IC2Items.GOLD_DUST.get(), 9);
-        }
-
-        return ItemStack.EMPTY;
+    @Override
+    protected void onProcessingCompleted(ItemStack input, ProcessingOperation operation) {
+        pendingExperience += operation.experience();
     }
 
-    private float getExperienceForInput(ItemStack input) {
-        RecipeHolder<MaceratorRecipe> recipe = getDataDrivenRecipe(input);
-        if (recipe != null) {
-            return recipe.value().experience();
-        }
-
-        if (input.is(IC2Blocks.LEAD_ORE.asItem()) || input.is(IC2Blocks.TIN_ORE.asItem())
-                || input.is(Blocks.COPPER_ORE.asItem()) || input.is(Blocks.DEEPSLATE_COPPER_ORE.asItem())
-                || input.is(Blocks.IRON_ORE.asItem()) || input.is(Blocks.DEEPSLATE_IRON_ORE.asItem())
-                || input.is(Blocks.GOLD_ORE.asItem()) || input.is(Blocks.DEEPSLATE_GOLD_ORE.asItem())
-                || input.is(Items.RAW_COPPER) || input.is(Items.RAW_IRON) || input.is(Items.RAW_GOLD)) {
-            return 0.2F;
-        }
-
-        if (input.is(IC2Items.LEAD_INGOT.get()) || input.is(IC2Items.TIN_INGOT.get())
-                || input.is(Items.COPPER_INGOT) || input.is(Items.IRON_INGOT) || input.is(Items.GOLD_INGOT)
-                || input.is(Blocks.COPPER_BLOCK.asItem()) || input.is(Blocks.IRON_BLOCK.asItem()) || input.is(Blocks.GOLD_BLOCK.asItem())) {
-            return 0.1F;
-        }
-
-        return 0.0F;
-    }
-
-    private int getMaxProgress() {
+    @Override
+    protected int getOperationMaxProgress() {
         return scaledProgress(BASE_MAX_PROGRESS, 24);
     }
 
-    private int getEnergyPerTick() {
+    @Override
+    protected int getOperationEnergyPerTick() {
         return scaledEnergyPerTick(BASE_ENERGY_PER_TICK);
+    }
+
+    @Override
+    protected void playProcessingSound(Level level, BlockPos pos) {
+        MachineSoundHelper.playPeriodic(level, pos, IC2Sounds.MACERATOR_OPERATING.get());
+    }
+
+    @Override
+    protected void updateActiveState(Level level, BlockPos pos, BlockState state, boolean active) {
+        if (state.getBlock() instanceof MaceratorBlock && state.getValue(MaceratorBlock.ACTIVE) != active) {
+            level.setBlock(pos, state.setValue(MaceratorBlock.ACTIVE, active), Block.UPDATE_CLIENTS);
+        }
+    }
+
+    private ProcessingOperation getLegacyMaceratorOperation(ItemStack input) {
+        if (input.is(IC2Blocks.LEAD_ORE.asItem())) {
+            return new ProcessingOperation(new ItemStack(IC2Items.LEAD_DUST.get(), 2), 1, 0.2F);
+        }
+        if (input.is(IC2Blocks.TIN_ORE.asItem())) {
+            return new ProcessingOperation(new ItemStack(IC2Items.TIN_DUST.get(), 2), 1, 0.2F);
+        }
+        if (input.is(Blocks.COPPER_ORE.asItem()) || input.is(Blocks.DEEPSLATE_COPPER_ORE.asItem())) {
+            return new ProcessingOperation(new ItemStack(IC2Items.COPPER_DUST.get(), 2), 1, 0.2F);
+        }
+        if (input.is(Blocks.IRON_ORE.asItem()) || input.is(Blocks.DEEPSLATE_IRON_ORE.asItem())) {
+            return new ProcessingOperation(new ItemStack(IC2Items.IRON_DUST.get(), 2), 1, 0.2F);
+        }
+        if (input.is(Blocks.GOLD_ORE.asItem()) || input.is(Blocks.DEEPSLATE_GOLD_ORE.asItem())) {
+            return new ProcessingOperation(new ItemStack(IC2Items.GOLD_DUST.get(), 2), 1, 0.2F);
+        }
+        if (input.is(Items.RAW_COPPER)) {
+            return new ProcessingOperation(new ItemStack(IC2Items.COPPER_DUST.get(), 2), 1, 0.2F);
+        }
+        if (input.is(Items.RAW_IRON)) {
+            return new ProcessingOperation(new ItemStack(IC2Items.IRON_DUST.get(), 2), 1, 0.2F);
+        }
+        if (input.is(Items.RAW_GOLD)) {
+            return new ProcessingOperation(new ItemStack(IC2Items.GOLD_DUST.get(), 2), 1, 0.2F);
+        }
+        if (input.is(Blocks.COBBLESTONE.asItem())) {
+            return new ProcessingOperation(new ItemStack(Blocks.SAND), 1, 0.0F);
+        }
+        if (input.is(Blocks.GRAVEL.asItem())) {
+            return new ProcessingOperation(new ItemStack(Items.FLINT), 1, 0.0F);
+        }
+        if (input.is(IC2Items.LEAD_INGOT.get())) {
+            return new ProcessingOperation(new ItemStack(IC2Items.LEAD_DUST.get()), 1, 0.1F);
+        }
+        if (input.is(IC2Items.TIN_INGOT.get())) {
+            return new ProcessingOperation(new ItemStack(IC2Items.TIN_DUST.get()), 1, 0.1F);
+        }
+        if (input.is(Blocks.COPPER_BLOCK.asItem())) {
+            return new ProcessingOperation(new ItemStack(IC2Items.COPPER_DUST.get(), 9), 1, 0.1F);
+        }
+        if (input.is(Items.COPPER_INGOT)) {
+            return new ProcessingOperation(new ItemStack(IC2Items.COPPER_DUST.get()), 1, 0.1F);
+        }
+        if (input.is(Items.IRON_INGOT)) {
+            return new ProcessingOperation(new ItemStack(IC2Items.IRON_DUST.get()), 1, 0.1F);
+        }
+        if (input.is(Items.GOLD_INGOT)) {
+            return new ProcessingOperation(new ItemStack(IC2Items.GOLD_DUST.get()), 1, 0.1F);
+        }
+        if (input.is(Blocks.IRON_BLOCK.asItem())) {
+            return new ProcessingOperation(new ItemStack(IC2Items.IRON_DUST.get(), 9), 1, 0.1F);
+        }
+        if (input.is(Blocks.GOLD_BLOCK.asItem())) {
+            return new ProcessingOperation(new ItemStack(IC2Items.GOLD_DUST.get(), 9), 1, 0.1F);
+        }
+        return ProcessingOperation.empty();
     }
 
     private RecipeHolder<MaceratorRecipe> getDataDrivenRecipe(ItemStack input) {
@@ -338,7 +263,7 @@ public final class MaceratorBlockEntity extends AbstractProcessingMachineBlockEn
         }
 
         return level.getRecipeManager()
-                .getRecipeFor(ic2.core.recipe.IC2RecipeTypes.MACERATING.get(), new SingleRecipeInput(input), level)
+                .getRecipeFor(IC2RecipeTypes.MACERATING.get(), new SingleRecipeInput(input), level)
                 .orElse(null);
     }
 }

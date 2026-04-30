@@ -1,6 +1,7 @@
 package ic2.core.menu;
 
 import ic2.core.block.storage.BaseEnergyStorageBlockEntity;
+import ic2.core.item.electric.ElectricItemManager;
 import ic2.core.init.IC2Menus;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
@@ -12,6 +13,10 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.SlotItemHandler;
 
 public final class BatBoxMenu extends AbstractContainerMenu {
+    private static final int CHARGE_SLOT = 0;
+    private static final int DISCHARGE_SLOT = 1;
+    private static final int CONTAINER_SLOTS = 2;
+
     private final BaseEnergyStorageBlockEntity blockEntity;
     private final ContainerData data;
     private final Inventory playerInventory;
@@ -72,23 +77,19 @@ public final class BatBoxMenu extends AbstractContainerMenu {
         ItemStack stack = slot.getItem();
         copied = stack.copy();
 
-        if (index < containerSlots) {
-            if (!moveItemStackTo(stack, containerSlots, slots.size(), false)) {
+        if (index < CONTAINER_SLOTS) {
+            if (!moveItemStackTo(stack, CONTAINER_SLOTS, slots.size(), false)) {
                 return ItemStack.EMPTY;
             }
-        } else if (blockEntity.isDischargeableItem(stack)) {
-            if (!moveItemStackTo(stack, 1, 2, false)) {
+        } else if (blockEntity.isChargeableItem(stack) || blockEntity.isDischargeableItem(stack)) {
+            if (!moveEnergyItem(stack)) {
                 return ItemStack.EMPTY;
             }
-        } else if (blockEntity.isChargeableItem(stack)) {
-            if (!moveItemStackTo(stack, 0, 1, false)) {
+        } else if (index < CONTAINER_SLOTS + 27) {
+            if (!moveItemStackTo(stack, CONTAINER_SLOTS + 27, slots.size(), false)) {
                 return ItemStack.EMPTY;
             }
-        } else if (index < containerSlots + 27) {
-            if (!moveItemStackTo(stack, containerSlots + 27, slots.size(), false)) {
-                return ItemStack.EMPTY;
-            }
-        } else if (!moveItemStackTo(stack, containerSlots, containerSlots + 27, false)) {
+        } else if (!moveItemStackTo(stack, CONTAINER_SLOTS, CONTAINER_SLOTS + 27, false)) {
             return ItemStack.EMPTY;
         }
 
@@ -137,5 +138,30 @@ public final class BatBoxMenu extends AbstractContainerMenu {
         for (int slot = 0; slot < 9; slot++) {
             addSlot(new Slot(playerInventory, slot, 7 + slot * 18, 141));
         }
+    }
+
+    private boolean moveEnergyItem(ItemStack stack) {
+        boolean canCharge = blockEntity.isChargeableItem(stack);
+        boolean canDischarge = blockEntity.isDischargeableItem(stack);
+        int charge = ElectricItemManager.getCharge(stack);
+        int maxCharge = ElectricItemManager.getMaxCharge(stack);
+
+        if (canCharge && (!canDischarge || charge < maxCharge)) {
+            if (moveItemStackTo(stack, CHARGE_SLOT, CHARGE_SLOT + 1, false)) {
+                return true;
+            }
+        }
+
+        if (canDischarge) {
+            if (moveItemStackTo(stack, DISCHARGE_SLOT, DISCHARGE_SLOT + 1, false)) {
+                return true;
+            }
+        }
+
+        if (canCharge) {
+            return moveItemStackTo(stack, CHARGE_SLOT, CHARGE_SLOT + 1, false);
+        }
+
+        return false;
     }
 }

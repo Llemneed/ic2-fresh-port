@@ -5,6 +5,8 @@ import ic2.core.energy.EnergyConsumer;
 import ic2.core.init.IC2BlockEntities;
 import ic2.core.init.IC2Items;
 import ic2.core.menu.MetalFormerMenu;
+import ic2.core.recipe.IC2RecipeTypes;
+import ic2.core.recipe.MetalFormerRecipe;
 import java.util.List;
 import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
@@ -19,6 +21,8 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -45,24 +49,24 @@ public final class MetalFormerBlockEntity extends AbstractProcessingMachineBlock
         CUTTING
     }
 
-    private record MetalFormerRecipe(int inputCount, Predicate<ItemStack> matches, ItemStack output) {
+    private record LegacyMetalFormerRecipe(int inputCount, Predicate<ItemStack> matches, ItemStack output) {
     }
 
-    private static final List<MetalFormerRecipe> EXTRUDING_RECIPES = List.of(
-            new MetalFormerRecipe(1, stack -> stack.is(IC2Items.TIN_INGOT.get()), new ItemStack(IC2Items.TIN_CAN.get()))
+    private static final List<LegacyMetalFormerRecipe> EXTRUDING_RECIPES = List.of(
+            new LegacyMetalFormerRecipe(1, stack -> stack.is(IC2Items.TIN_INGOT.get()), new ItemStack(IC2Items.TIN_CAN.get()))
     );
-    private static final List<MetalFormerRecipe> ROLLING_RECIPES = List.of(
-            new MetalFormerRecipe(1, stack -> stack.is(Items.IRON_INGOT), new ItemStack(IC2Items.IRON_PLATE.get())),
-            new MetalFormerRecipe(1, stack -> stack.is(Items.GOLD_INGOT), new ItemStack(IC2Items.GOLD_PLATE.get())),
-            new MetalFormerRecipe(1, stack -> stack.is(Items.COPPER_INGOT), new ItemStack(IC2Items.COPPER_PLATE.get())),
-            new MetalFormerRecipe(1, stack -> stack.is(IC2Items.TIN_INGOT.get()), new ItemStack(IC2Items.TIN_PLATE.get())),
-            new MetalFormerRecipe(1, stack -> stack.is(IC2Items.LEAD_INGOT.get()), new ItemStack(IC2Items.LEAD_PLATE.get())),
-            new MetalFormerRecipe(1, stack -> stack.is(IC2Items.BRONZE_INGOT.get()), new ItemStack(IC2Items.BRONZE_PLATE.get()))
+    private static final List<LegacyMetalFormerRecipe> ROLLING_RECIPES = List.of(
+            new LegacyMetalFormerRecipe(1, stack -> stack.is(Items.IRON_INGOT), new ItemStack(IC2Items.IRON_PLATE.get())),
+            new LegacyMetalFormerRecipe(1, stack -> stack.is(Items.GOLD_INGOT), new ItemStack(IC2Items.GOLD_PLATE.get())),
+            new LegacyMetalFormerRecipe(1, stack -> stack.is(Items.COPPER_INGOT), new ItemStack(IC2Items.COPPER_PLATE.get())),
+            new LegacyMetalFormerRecipe(1, stack -> stack.is(IC2Items.TIN_INGOT.get()), new ItemStack(IC2Items.TIN_PLATE.get())),
+            new LegacyMetalFormerRecipe(1, stack -> stack.is(IC2Items.LEAD_INGOT.get()), new ItemStack(IC2Items.LEAD_PLATE.get())),
+            new LegacyMetalFormerRecipe(1, stack -> stack.is(IC2Items.BRONZE_INGOT.get()), new ItemStack(IC2Items.BRONZE_PLATE.get()))
     );
-    private static final List<MetalFormerRecipe> CUTTING_RECIPES = List.of(
-            new MetalFormerRecipe(1, stack -> stack.is(Blocks.IRON_BLOCK.asItem()), new ItemStack(IC2Items.IRON_PLATE.get(), 9)),
-            new MetalFormerRecipe(1, stack -> stack.is(Blocks.GOLD_BLOCK.asItem()), new ItemStack(IC2Items.GOLD_PLATE.get(), 9)),
-            new MetalFormerRecipe(1, stack -> stack.is(Blocks.COPPER_BLOCK.asItem()), new ItemStack(IC2Items.COPPER_PLATE.get(), 9))
+    private static final List<LegacyMetalFormerRecipe> CUTTING_RECIPES = List.of(
+            new LegacyMetalFormerRecipe(1, stack -> stack.is(Blocks.IRON_BLOCK.asItem()), new ItemStack(IC2Items.IRON_PLATE.get(), 9)),
+            new LegacyMetalFormerRecipe(1, stack -> stack.is(Blocks.GOLD_BLOCK.asItem()), new ItemStack(IC2Items.GOLD_PLATE.get(), 9)),
+            new LegacyMetalFormerRecipe(1, stack -> stack.is(Blocks.COPPER_BLOCK.asItem()), new ItemStack(IC2Items.COPPER_PLATE.get(), 9))
     );
 
     private final ContainerData data = new ContainerData() {
@@ -70,7 +74,7 @@ public final class MetalFormerBlockEntity extends AbstractProcessingMachineBlock
         public int get(int index) {
             return switch (index) {
                 case 0 -> progress;
-                case 1 -> getMaxProgress();
+                case 1 -> getOperationMaxProgress();
                 case 2 -> energyStored;
                 case 3 -> getMaxEnergyStored();
                 case 4 -> mode.ordinal();
@@ -116,36 +120,7 @@ public final class MetalFormerBlockEntity extends AbstractProcessingMachineBlock
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, MetalFormerBlockEntity blockEntity) {
-        blockEntity.consumeChargeItem();
-
-        MetalFormerRecipe recipe = blockEntity.getRecipe(blockEntity.inventory.getStackInSlot(INPUT_SLOT));
-        int energyPerTick = blockEntity.getEnergyPerTick();
-        int maxProgress = blockEntity.getMaxProgress();
-        boolean canProcess = blockEntity.canWorkWithRedstone()
-                && recipe != null
-                && blockEntity.canOutput(recipe.output)
-                && blockEntity.energyStored >= energyPerTick;
-
-        if (canProcess) {
-            blockEntity.energyStored -= energyPerTick;
-            blockEntity.progress++;
-
-            if (blockEntity.progress >= maxProgress) {
-                blockEntity.progress = 0;
-                blockEntity.process(recipe);
-            }
-        } else if (blockEntity.progress != 0) {
-            blockEntity.progress = 0;
-        }
-
-        boolean active = canProcess;
-        if (state.getBlock() instanceof MetalFormerBlock && state.getValue(MetalFormerBlock.ACTIVE) != active) {
-            level.setBlock(pos, state.setValue(MetalFormerBlock.ACTIVE, active), Block.UPDATE_CLIENTS);
-        }
-
-        if (canProcess || blockEntity.progress == 0) {
-            setChanged(level, pos, state);
-        }
+        blockEntity.tickProcessing(level, pos, state);
     }
 
     public ItemStackHandler getInventory() {
@@ -203,42 +178,51 @@ public final class MetalFormerBlockEntity extends AbstractProcessingMachineBlock
     }
 
     public boolean hasRecipe(ItemStack input) {
-        return getRecipe(input) != null;
+        return !getProcessingOperation(input).isEmpty();
     }
 
     public boolean isUpgrade(ItemStack stack) {
         return getUpgradeType(stack) != null;
     }
 
-    private void process(MetalFormerRecipe recipe) {
-        inventory.extractItem(INPUT_SLOT, recipe.inputCount, false);
-        ItemStack output = inventory.getStackInSlot(OUTPUT_SLOT);
-        ItemStack result = recipe.output.copy();
+    @Override
+    protected ProcessingOperation getProcessingOperation(ItemStack input) {
+        RecipeHolder<MetalFormerRecipe> dataDrivenRecipe = getDataDrivenRecipe(input);
+        if (dataDrivenRecipe != null) {
+            ItemStack result = dataDrivenRecipe.value().assemble(new SingleRecipeInput(input), level.registryAccess()).copy();
+            return new ProcessingOperation(result, dataDrivenRecipe.value().ingredientCount(), 0.0F);
+        }
 
-        if (output.isEmpty()) {
-            inventory.setStackInSlot(OUTPUT_SLOT, result);
-        } else {
-            output.grow(result.getCount());
-            inventory.setStackInSlot(OUTPUT_SLOT, output);
+        // TODO(milestone-4): migrate remaining hardcoded metal former recipes to data-driven ic2:metal_forming JSONs.
+        LegacyMetalFormerRecipe legacyRecipe = getLegacyRecipe(input);
+        if (legacyRecipe == null) {
+            return ProcessingOperation.empty();
+        }
+        return new ProcessingOperation(legacyRecipe.output.copy(), legacyRecipe.inputCount, 0.0F);
+    }
+
+    @Override
+    protected int getOperationMaxProgress() {
+        return scaledProgress(BASE_MAX_PROGRESS, 30);
+    }
+
+    @Override
+    protected int getOperationEnergyPerTick() {
+        return scaledEnergyPerTick(BASE_ENERGY_PER_TICK);
+    }
+
+    @Override
+    protected void updateActiveState(Level level, BlockPos pos, BlockState state, boolean active) {
+        if (state.getBlock() instanceof MetalFormerBlock && state.getValue(MetalFormerBlock.ACTIVE) != active) {
+            level.setBlock(pos, state.setValue(MetalFormerBlock.ACTIVE, active), Block.UPDATE_CLIENTS);
         }
     }
 
-    private boolean canOutput(ItemStack result) {
-        ItemStack output = inventory.getStackInSlot(OUTPUT_SLOT);
-        if (output.isEmpty()) {
-            return true;
-        }
-        if (!ItemStack.isSameItemSameComponents(output, result)) {
-            return false;
-        }
-        return output.getCount() + result.getCount() <= output.getMaxStackSize();
-    }
-
-    private MetalFormerRecipe getRecipe(ItemStack input) {
+    private LegacyMetalFormerRecipe getLegacyRecipe(ItemStack input) {
         if (input.isEmpty()) {
             return null;
         }
-        for (MetalFormerRecipe recipe : getRecipesForMode()) {
+        for (LegacyMetalFormerRecipe recipe : getRecipesForMode()) {
             if (input.getCount() >= recipe.inputCount && recipe.matches.test(input)) {
                 return recipe;
             }
@@ -246,7 +230,7 @@ public final class MetalFormerBlockEntity extends AbstractProcessingMachineBlock
         return null;
     }
 
-    private List<MetalFormerRecipe> getRecipesForMode() {
+    private List<LegacyMetalFormerRecipe> getRecipesForMode() {
         return switch (mode) {
             case EXTRUDING -> EXTRUDING_RECIPES;
             case ROLLING -> ROLLING_RECIPES;
@@ -254,11 +238,23 @@ public final class MetalFormerBlockEntity extends AbstractProcessingMachineBlock
         };
     }
 
-    private int getMaxProgress() {
-        return scaledProgress(BASE_MAX_PROGRESS, 30);
-    }
+    private RecipeHolder<MetalFormerRecipe> getDataDrivenRecipe(ItemStack input) {
+        if (level == null || input.isEmpty()) {
+            return null;
+        }
 
-    private int getEnergyPerTick() {
-        return scaledEnergyPerTick(BASE_ENERGY_PER_TICK);
+        MetalFormerRecipe.Mode expectedMode = switch (mode) {
+            case EXTRUDING -> MetalFormerRecipe.Mode.EXTRUDING;
+            case ROLLING -> MetalFormerRecipe.Mode.ROLLING;
+            case CUTTING -> MetalFormerRecipe.Mode.CUTTING;
+        };
+
+        return level.getRecipeManager()
+                .getAllRecipesFor(IC2RecipeTypes.METAL_FORMING.get())
+                .stream()
+                .filter(recipe -> recipe.value().mode() == expectedMode)
+                .filter(recipe -> recipe.value().matches(new SingleRecipeInput(input), level))
+                .findFirst()
+                .orElse(null);
     }
 }

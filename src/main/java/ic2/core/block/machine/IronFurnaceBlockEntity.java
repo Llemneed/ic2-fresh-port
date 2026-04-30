@@ -1,16 +1,17 @@
 package ic2.core.block.machine;
 
+import ic2.core.block.entity.AbstractInventoryBlockEntity;
 import ic2.core.init.IC2BlockEntities;
 import ic2.core.init.IC2Blocks;
 import ic2.core.menu.IronFurnaceMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.ExperienceOrb;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -21,25 +22,15 @@ import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.crafting.SmeltingRecipe;
-import net.neoforged.neoforge.items.ItemStackHandler;
 
-public final class IronFurnaceBlockEntity extends BlockEntity implements MenuProvider {
+public final class IronFurnaceBlockEntity extends AbstractInventoryBlockEntity implements MenuProvider {
     private static final int INPUT_SLOT = 0;
     private static final int FUEL_SLOT = 1;
     private static final int OUTPUT_SLOT = 2;
     private static final int MAX_PROGRESS = 100;
-
-    private final ItemStackHandler inventory = new ItemStackHandler(3) {
-        @Override
-        protected void onContentsChanged(int slot) {
-            setChanged();
-        }
-    };
 
     private final ContainerData data = new ContainerData() {
         @Override
@@ -76,7 +67,7 @@ public final class IronFurnaceBlockEntity extends BlockEntity implements MenuPro
     private float pendingExperience;
 
     public IronFurnaceBlockEntity(BlockPos pos, BlockState blockState) {
-        super(IC2BlockEntities.IRON_FURNACE.get(), pos, blockState);
+        super(IC2BlockEntities.IRON_FURNACE.get(), pos, blockState, 3);
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, IronFurnaceBlockEntity blockEntity) {
@@ -123,25 +114,8 @@ public final class IronFurnaceBlockEntity extends BlockEntity implements MenuPro
         setChanged(level, pos, state);
     }
 
-    public ItemStackHandler getInventory() {
-        return inventory;
-    }
-
     public ContainerData getData() {
         return data;
-    }
-
-    public void dropContents() {
-        if (level == null || level.isClientSide) {
-            return;
-        }
-
-        for (int slot = 0; slot < inventory.getSlots(); slot++) {
-            ItemStack stack = inventory.getStackInSlot(slot);
-            if (!stack.isEmpty()) {
-                level.addFreshEntity(new ItemEntity(level, worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5, stack.copy()));
-            }
-        }
     }
 
     @Override
@@ -157,7 +131,7 @@ public final class IronFurnaceBlockEntity extends BlockEntity implements MenuPro
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
-        tag.put("inventory", inventory.serializeNBT(registries));
+        saveInventory(tag, registries);
         tag.putInt("progress", progress);
         tag.putInt("burnTime", burnTime);
         tag.putInt("burnTimeTotal", burnTimeTotal);
@@ -167,7 +141,7 @@ public final class IronFurnaceBlockEntity extends BlockEntity implements MenuPro
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
-        inventory.deserializeNBT(registries, tag.getCompound("inventory"));
+        loadInventory(tag.getCompound("inventory"), registries);
         progress = tag.getInt("progress");
         burnTime = tag.getInt("burnTime");
         burnTimeTotal = tag.getInt("burnTimeTotal");

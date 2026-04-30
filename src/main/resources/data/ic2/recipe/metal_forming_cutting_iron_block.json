@@ -1,0 +1,13 @@
+{
+  "type": "ic2:metal_forming",
+  "mode": "cutting",
+  "ingredient": {
+    "item": "minecraft:iron_block"
+  },
+  "result": {
+    "id": "ic2:iron_plate",
+    "count": 9
+  },
+  "ingredientCount": 1,
+  "energy": 1200
+}

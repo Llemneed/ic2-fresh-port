@@ -19,6 +19,12 @@ public final class IC2RecipeSerializers {
     public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<CompressorRecipe>> COMPRESSING =
             RECIPE_SERIALIZERS.register("compressing", CompressorRecipeSerializer::new);
 
+    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<MetalFormerRecipe>> METAL_FORMING =
+            RECIPE_SERIALIZERS.register("metal_forming", MetalFormerRecipeSerializer::new);
+
+    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<SolidCannerRecipe>> SOLID_CANNING =
+            RECIPE_SERIALIZERS.register("solid_canning", SolidCannerRecipeSerializer::new);
+
     private IC2RecipeSerializers() {
     }
 }

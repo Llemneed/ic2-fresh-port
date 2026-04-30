@@ -5,6 +5,9 @@ import ic2.core.energy.EnergyConsumer;
 import ic2.core.init.IC2BlockEntities;
 import ic2.core.init.IC2Items;
 import ic2.core.menu.SolidCannerMenu;
+import ic2.core.recipe.DualStackRecipeInput;
+import ic2.core.recipe.IC2RecipeTypes;
+import ic2.core.recipe.SolidCannerRecipe;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -16,10 +19,10 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.items.ItemStackHandler;
 
 public final class SolidCannerBlockEntity extends AbstractProcessingMachineBlockEntity implements MenuProvider, EnergyConsumer {
     private static final int SLOT_COUNT = 8;
@@ -35,13 +38,14 @@ public final class SolidCannerBlockEntity extends AbstractProcessingMachineBlock
     private static final int ENERGY_PER_REDSTONE_CHARGE = 200;
     private static final int ENERGY_STORAGE_PER_UPGRADE = 10000;
     private static final int[] INPUT_TIERS = {32, 128, 512, 2048, 8192};
+    private int pendingCanInputCount = 1;
 
     private final ContainerData data = new ContainerData() {
         @Override
         public int get(int index) {
             return switch (index) {
                 case 0 -> progress;
-                case 1 -> getMaxProgress();
+                case 1 -> getOperationMaxProgress();
                 case 2 -> energyStored;
                 case 3 -> getMaxEnergyStored();
                 default -> 0;
@@ -83,43 +87,7 @@ public final class SolidCannerBlockEntity extends AbstractProcessingMachineBlock
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, SolidCannerBlockEntity blockEntity) {
-        blockEntity.consumeChargeItem();
-
-        ItemStack output = blockEntity.getCanningResult(
-                blockEntity.inventory.getStackInSlot(INPUT_SLOT),
-                blockEntity.inventory.getStackInSlot(CAN_SLOT)
-        );
-        int energyPerTick = blockEntity.getEnergyPerTick();
-        int maxProgress = blockEntity.getMaxProgress();
-        boolean canProcess = blockEntity.canWorkWithRedstone()
-                && !output.isEmpty()
-                && blockEntity.canOutput(output)
-                && blockEntity.energyStored >= energyPerTick;
-
-        if (canProcess) {
-            blockEntity.energyStored -= energyPerTick;
-            blockEntity.progress++;
-
-            if (blockEntity.progress >= maxProgress) {
-                blockEntity.progress = 0;
-                blockEntity.process(output.copy());
-            }
-        } else if (blockEntity.progress != 0) {
-            blockEntity.progress = 0;
-        }
-
-        boolean active = canProcess;
-        if (state.getBlock() instanceof SolidCannerBlock && state.getValue(SolidCannerBlock.ACTIVE) != active) {
-            level.setBlock(pos, state.setValue(SolidCannerBlock.ACTIVE, active), Block.UPDATE_CLIENTS);
-        }
-
-        if (canProcess || blockEntity.progress == 0) {
-            setChanged(level, pos, state);
-        }
-    }
-
-    public ItemStackHandler getInventory() {
-        return inventory;
+        blockEntity.tickProcessing(level, pos, state);
     }
 
     public ContainerData getData() {
@@ -153,7 +121,7 @@ public final class SolidCannerBlockEntity extends AbstractProcessingMachineBlock
     }
 
     public boolean hasRecipe(ItemStack input, ItemStack canInput) {
-        return !getCanningResult(input, canInput).isEmpty();
+        return !getCanningOperation(input, canInput).isEmpty();
     }
 
     public boolean isInput(ItemStack stack) {
@@ -168,35 +136,51 @@ public final class SolidCannerBlockEntity extends AbstractProcessingMachineBlock
         return getUpgradeType(stack) != null;
     }
 
-    private void process(ItemStack result) {
-        inventory.extractItem(INPUT_SLOT, 1, false);
-        inventory.extractItem(CAN_SLOT, 1, false);
-        ItemStack output = inventory.getStackInSlot(OUTPUT_SLOT);
+    @Override
+    protected ProcessingOperation getProcessingOperation(ItemStack input) {
+        return getCanningOperation(input, inventory.getStackInSlot(CAN_SLOT));
+    }
 
-        if (output.isEmpty()) {
-            inventory.setStackInSlot(OUTPUT_SLOT, result);
-        } else {
-            output.grow(result.getCount());
-            inventory.setStackInSlot(OUTPUT_SLOT, output);
+    @Override
+    protected void completeProcessing(ItemStack input, ProcessingOperation operation) {
+        consumeInputsForOperation(operation);
+        inventory.extractItem(CAN_SLOT, pendingCanInputCount, false);
+        insertOperationResult(operation);
+        pendingCanInputCount = 1;
+    }
+
+    @Override
+    protected int getOperationMaxProgress() {
+        return scaledProgress(BASE_MAX_PROGRESS, 20);
+    }
+
+    @Override
+    protected int getOperationEnergyPerTick() {
+        return scaledEnergyPerTick(BASE_ENERGY_PER_TICK);
+    }
+
+    @Override
+    protected void updateActiveState(Level level, BlockPos pos, BlockState state, boolean active) {
+        if (state.getBlock() instanceof SolidCannerBlock && state.getValue(SolidCannerBlock.ACTIVE) != active) {
+            level.setBlock(pos, state.setValue(SolidCannerBlock.ACTIVE, active), Block.UPDATE_CLIENTS);
         }
     }
 
-    private ItemStack getCanningResult(ItemStack input, ItemStack canInput) {
+    private ProcessingOperation getCanningOperation(ItemStack input, ItemStack canInput) {
+        RecipeHolder<SolidCannerRecipe> recipe = getDataDrivenRecipe(input, canInput);
+        if (recipe != null) {
+            pendingCanInputCount = Math.max(1, recipe.value().canCount());
+            ItemStack result = recipe.value().assemble(new DualStackRecipeInput(input, canInput), level.registryAccess()).copy();
+            return new ProcessingOperation(result, recipe.value().inputCount(), 0.0F);
+        }
+
+        // TODO(milestone-4): keep legacy solid canner fallback temporarily for compatibility while expanding JSON coverage further.
         if (!isCannableFood(input) || !isTinCan(canInput)) {
-            return ItemStack.EMPTY;
+            pendingCanInputCount = 1;
+            return ProcessingOperation.empty();
         }
-        return new ItemStack(IC2Items.FILLED_TIN_CAN.get());
-    }
-
-    private boolean canOutput(ItemStack result) {
-        ItemStack output = inventory.getStackInSlot(OUTPUT_SLOT);
-        if (output.isEmpty()) {
-            return true;
-        }
-        if (!ItemStack.isSameItemSameComponents(output, result)) {
-            return false;
-        }
-        return output.getCount() + result.getCount() <= output.getMaxStackSize();
+        pendingCanInputCount = 1;
+        return new ProcessingOperation(new ItemStack(IC2Items.FILLED_TIN_CAN.get()), 1, 0.0F);
     }
 
     private boolean isCannableFood(ItemStack stack) {
@@ -217,11 +201,13 @@ public final class SolidCannerBlockEntity extends AbstractProcessingMachineBlock
                 || stack.is(Items.COOKED_SALMON);
     }
 
-    private int getMaxProgress() {
-        return scaledProgress(BASE_MAX_PROGRESS, 20);
-    }
+    private RecipeHolder<SolidCannerRecipe> getDataDrivenRecipe(ItemStack input, ItemStack canInput) {
+        if (level == null || input.isEmpty() || canInput.isEmpty()) {
+            return null;
+        }
 
-    private int getEnergyPerTick() {
-        return scaledEnergyPerTick(BASE_ENERGY_PER_TICK);
+        return level.getRecipeManager()
+                .getRecipeFor(IC2RecipeTypes.SOLID_CANNING.get(), new DualStackRecipeInput(input, canInput), level)
+                .orElse(null);
     }
 }

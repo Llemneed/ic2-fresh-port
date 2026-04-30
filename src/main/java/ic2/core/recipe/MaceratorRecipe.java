@@ -65,7 +65,11 @@ public record MaceratorRecipe(
 
     @Override
     public ItemStack getResultItem(HolderLookup.Provider registries) {
-        return assemble(new SingleRecipeInput(ItemStack.EMPTY), registries);
+        Item item = BuiltInRegistries.ITEM.get(result.id());
+        if (item == Items.AIR) {
+            return ItemStack.EMPTY;
+        }
+        return new ItemStack(item, result.count());
     }
 
     @Override

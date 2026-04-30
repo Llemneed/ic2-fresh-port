@@ -7,6 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -132,5 +133,102 @@ public abstract class AbstractProcessingMachineBlockEntity extends AbstractMachi
     protected int scaledEnergyPerTick(int baseEnergyPerTick) {
         int upgrades = Math.min(4, getUpgradeCount(UpgradeType.OVERCLOCKER));
         return Math.max(baseEnergyPerTick, Mth.ceil(baseEnergyPerTick * Math.pow(1.6D, upgrades)));
+    }
+
+    public static record ProcessingOperation(ItemStack result, int ingredientCount, float experience) {
+        public static ProcessingOperation empty() {
+            return new ProcessingOperation(ItemStack.EMPTY, 0, 0.0F);
+        }
+
+        public boolean isEmpty() {
+            return result.isEmpty();
+        }
+    }
+
+    protected final void tickProcessing(Level level, BlockPos pos, BlockState state) {
+        consumeChargeItem();
+
+        ItemStack input = inventory.getStackInSlot(inputSlot);
+        ProcessingOperation operation = getProcessingOperation(input);
+        int energyPerTick = getOperationEnergyPerTick();
+        int maxProgress = getOperationMaxProgress();
+        boolean canProcess = canWorkWithRedstone()
+                && !operation.isEmpty()
+                && canOutputStack(operation.result())
+                && energyStored >= energyPerTick;
+
+        if (canProcess) {
+            energyStored -= energyPerTick;
+            progress++;
+            playProcessingSound(level, pos);
+
+            if (progress >= maxProgress) {
+                progress = 0;
+                ItemStack completedInput = input.copy();
+                onProcessingCompleted(completedInput, operation);
+                completeProcessing(completedInput, operation);
+            }
+        } else if (progress != 0) {
+            progress = 0;
+        }
+
+        updateActiveState(level, pos, state, canProcess);
+
+        if (canProcess || progress == 0) {
+            setChanged(level, pos, state);
+        }
+    }
+
+    protected ProcessingOperation getProcessingOperation(ItemStack input) {
+        return ProcessingOperation.empty();
+    }
+
+    protected int getOperationEnergyPerTick() {
+        return 0;
+    }
+
+    protected int getOperationMaxProgress() {
+        return 0;
+    }
+
+    protected void playProcessingSound(Level level, BlockPos pos) {
+    }
+
+    protected void updateActiveState(Level level, BlockPos pos, BlockState state, boolean active) {
+    }
+
+    protected void onProcessingCompleted(ItemStack input, ProcessingOperation operation) {
+    }
+
+    protected void completeProcessing(ItemStack input, ProcessingOperation operation) {
+        consumeInputsForOperation(operation);
+        insertOperationResult(operation);
+    }
+
+    protected final boolean canOutputStack(ItemStack result) {
+        ItemStack output = inventory.getStackInSlot(outputSlot);
+        if (output.isEmpty()) {
+            return true;
+        }
+        if (!ItemStack.isSameItemSameComponents(output, result)) {
+            return false;
+        }
+        return output.getCount() + result.getCount() <= output.getMaxStackSize();
+    }
+
+    protected void consumeInputsForOperation(ProcessingOperation operation) {
+        inventory.extractItem(inputSlot, Math.max(1, operation.ingredientCount()), false);
+    }
+
+    protected final void insertOperationResult(ProcessingOperation operation) {
+        ItemStack output = inventory.getStackInSlot(outputSlot);
+        ItemStack result = operation.result().copy();
+
+        if (output.isEmpty()) {
+            inventory.setStackInSlot(outputSlot, result);
+        } else {
+            output.grow(result.getCount());
+            inventory.setStackInSlot(outputSlot, output);
+        }
     }
 }

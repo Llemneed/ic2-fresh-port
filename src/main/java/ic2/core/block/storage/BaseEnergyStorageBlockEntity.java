@@ -1,5 +1,6 @@
 package ic2.core.block.storage;
 
+import ic2.core.block.entity.AbstractEuInventoryBlockEntity;
 import ic2.core.energy.EnergyConsumer;
 import ic2.core.energy.EnergyNetHelper;
 import ic2.core.energy.EnergyTier;
@@ -11,18 +12,15 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.network.chat.Component;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.MenuProvider;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.items.ItemStackHandler;
 
-public abstract class BaseEnergyStorageBlockEntity extends BlockEntity implements MenuProvider, EnergyConsumer {
+public abstract class BaseEnergyStorageBlockEntity extends AbstractEuInventoryBlockEntity implements MenuProvider, EnergyConsumer {
     protected static final int CHARGE_SLOT = 0;
     protected static final int DISCHARGE_SLOT = 1;
 
@@ -32,13 +30,6 @@ public abstract class BaseEnergyStorageBlockEntity extends BlockEntity implement
     private final EnergyTier sinkTier;
     private final EnergyTier sourceTier;
     private final String displayKey;
-
-    private final ItemStackHandler inventory = new ItemStackHandler(2) {
-        @Override
-        protected void onContentsChanged(int slot) {
-            setChanged();
-        }
-    };
 
     private final ContainerData data = new ContainerData() {
         @Override
@@ -62,9 +53,6 @@ public abstract class BaseEnergyStorageBlockEntity extends BlockEntity implement
             return 2;
         }
     };
-
-    protected int energyStored;
-
     protected BaseEnergyStorageBlockEntity(
             BlockEntityType<?> type,
             BlockPos pos,
@@ -74,7 +62,7 @@ public abstract class BaseEnergyStorageBlockEntity extends BlockEntity implement
             int outputPerTick,
             String displayKey
     ) {
-        super(type, pos, blockState);
+        super(type, pos, blockState, 2);
         this.maxEnergy = maxEnergy;
         this.outputPerTick = outputPerTick;
         this.inputPerTick = inputPerTick;
@@ -93,10 +81,6 @@ public abstract class BaseEnergyStorageBlockEntity extends BlockEntity implement
 
     public ContainerData getData() {
         return data;
-    }
-
-    public ItemStackHandler getInventory() {
-        return inventory;
     }
 
     public int getEnergyStored() {
@@ -172,32 +156,15 @@ public abstract class BaseEnergyStorageBlockEntity extends BlockEntity implement
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
-        tag.put("inventory", inventory.serializeNBT(registries));
+        saveInventory(tag, registries);
         tag.putInt("energyStored", energyStored);
     }
 
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
-        inventory.deserializeNBT(registries, tag.getCompound("inventory"));
+        loadInventory(tag.getCompound("inventory"), registries);
         energyStored = tag.getInt("energyStored");
-    }
-
-    public void dropContents() {
-        if (level == null || level.isClientSide) {
-            return;
-        }
-
-        for (int slot = 0; slot < inventory.getSlots(); slot++) {
-            var stack = inventory.getStackInSlot(slot);
-            if (!stack.isEmpty()) {
-                level.addFreshEntity(new ItemEntity(level,
-                        worldPosition.getX() + 0.5,
-                        worldPosition.getY() + 0.5,
-                        worldPosition.getZ() + 0.5,
-                        stack.copy()));
-            }
-        }
     }
 
     @Override

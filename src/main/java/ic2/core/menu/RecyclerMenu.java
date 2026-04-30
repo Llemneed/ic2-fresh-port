@@ -14,6 +14,13 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.SlotItemHandler;
 
 public final class RecyclerMenu extends AbstractContainerMenu {
+    private static final int INPUT_SLOT = 0;
+    private static final int OUTPUT_SLOT = 1;
+    private static final int UPGRADE_START = 2;
+    private static final int UPGRADE_END_EXCLUSIVE = 6;
+    private static final int CHARGE_SLOT = 6;
+    private static final int CONTAINER_SLOTS = 7;
+
     private final RecyclerBlockEntity blockEntity;
     private final ContainerData data;
 
@@ -62,7 +69,6 @@ public final class RecyclerMenu extends AbstractContainerMenu {
     public ItemStack quickMoveStack(Player player, int index) {
         ItemStack copied = ItemStack.EMPTY;
         Slot slot = slots.get(index);
-        int containerSlots = 7;
 
         if (!slot.hasItem()) {
             return ItemStack.EMPTY;
@@ -71,37 +77,37 @@ public final class RecyclerMenu extends AbstractContainerMenu {
         ItemStack stack = slot.getItem();
         copied = stack.copy();
 
-        if (index == 1) {
-            if (!moveItemStackTo(stack, containerSlots, slots.size(), false)) {
+        if (index == OUTPUT_SLOT) {
+            if (!moveItemStackTo(stack, CONTAINER_SLOTS, slots.size(), false)) {
                 return ItemStack.EMPTY;
             }
-        } else if (index == 0) {
-            if (!moveItemStackTo(stack, containerSlots, slots.size(), true)) {
+        } else if (index == INPUT_SLOT) {
+            if (!moveItemStackTo(stack, CONTAINER_SLOTS, slots.size(), true)) {
                 return ItemStack.EMPTY;
             }
             slot.onQuickCraft(stack, copied);
-        } else if (index >= 2 && index <= 6) {
-            if (!moveItemStackTo(stack, containerSlots, slots.size(), false)) {
+        } else if (index >= UPGRADE_START && index <= CHARGE_SLOT) {
+            if (!moveItemStackTo(stack, CONTAINER_SLOTS, slots.size(), false)) {
                 return ItemStack.EMPTY;
             }
         } else if (blockEntity.isUpgrade(stack)) {
-            if (!moveItemStackTo(stack, 2, 6, false) && !moveItemStackTo(stack, 6, 7, false)) {
+            if (!moveItemStackTo(stack, UPGRADE_START, UPGRADE_END_EXCLUSIVE, false)) {
                 return ItemStack.EMPTY;
             }
         } else if (blockEntity.isChargeItem(stack)) {
-            if (!moveItemStackTo(stack, 6, 7, false)) {
+            if (!moveItemStackTo(stack, CHARGE_SLOT, CHARGE_SLOT + 1, false)) {
                 return ItemStack.EMPTY;
             }
         } else if (blockEntity.hasRecipe(stack)) {
-            if (!moveItemStackTo(stack, 0, 1, false)) {
+            if (!moveItemStackTo(stack, INPUT_SLOT, INPUT_SLOT + 1, false)) {
                 return ItemStack.EMPTY;
             }
         } else {
-            if (index < containerSlots + 27) {
-                if (!moveItemStackTo(stack, containerSlots + 27, slots.size(), false)) {
+            if (index < CONTAINER_SLOTS + 27) {
+                if (!moveItemStackTo(stack, CONTAINER_SLOTS + 27, slots.size(), false)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (!moveItemStackTo(stack, containerSlots, containerSlots + 27, false)) {
+            } else if (!moveItemStackTo(stack, CONTAINER_SLOTS, CONTAINER_SLOTS + 27, false)) {
                 return ItemStack.EMPTY;
             }
         }

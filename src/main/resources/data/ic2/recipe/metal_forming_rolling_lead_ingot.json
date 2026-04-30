@@ -1,0 +1,13 @@
+{
+  "type": "ic2:metal_forming",
+  "mode": "rolling",
+  "ingredient": {
+    "item": "ic2:lead_ingot"
+  },
+  "result": {
+    "id": "ic2:lead_plate",
+    "count": 1
+  },
+  "ingredientCount": 1,
+  "energy": 1200
+}
