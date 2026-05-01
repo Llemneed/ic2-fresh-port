@@ -174,22 +174,22 @@ public final class IC2Blocks {
     public static final DeferredBlock<CableBlock> TIN_CABLE = BLOCKS.registerBlock(
             "tin_cable",
             properties -> new CableBlock(CableType.TIN, properties),
-            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(0.8F)
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(0.8F).noOcclusion()
     );
     public static final DeferredBlock<CableBlock> COPPER_CABLE = BLOCKS.registerBlock(
             "copper_cable",
             properties -> new CableBlock(CableType.COPPER, properties),
-            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(0.8F)
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(0.8F).noOcclusion()
     );
     public static final DeferredBlock<CableBlock> GOLD_CABLE = BLOCKS.registerBlock(
             "gold_cable",
             properties -> new CableBlock(CableType.GOLD, properties),
-            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(0.8F)
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(0.8F).noOcclusion()
     );
     public static final DeferredBlock<CableBlock> GLASS_FIBRE_CABLE = BLOCKS.registerBlock(
             "glass_fibre_cable",
             properties -> new CableBlock(CableType.GLASS_FIBRE, properties),
-            BlockBehaviour.Properties.ofFullCopy(Blocks.GLASS).strength(0.5F)
+            BlockBehaviour.Properties.ofFullCopy(Blocks.GLASS).strength(0.5F).noOcclusion()
     );
     public static final DeferredBlock<TransformerBlock> LV_TRANSFORMER = BLOCKS.registerBlock(
             "lv_transformer",

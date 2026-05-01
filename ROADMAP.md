@@ -1,71 +1,65 @@
 # Roadmap
 
-## Phase 0 — Workspace
+## Milestone 0 - Workspace And Bootstrap
 - [x] NeoForge 1.21.1 workspace
-- [x] Main mod class
-- [x] Basic registries
-- [x] Clean README
-- [ ] Verify license and redistribution status
+- [x] Main mod bootstrap and deferred registries
+- [x] Basic build pipeline and GitHub Actions
+- [~] Project documentation cleanup
+- [ ] License and redistribution verification
 
-## Phase 1 — Stable Bootstrap
-- [x] DeferredRegister bootstrap
-- [x] Main creative tab
-- [x] Sound registry
-- [x] Core machine block entities
-- [ ] Clean pass on menus and screens
-
-## Phase 2 — Materials, Items And Blocks
-- [x] Basic ingots and dusts
-- [x] Rubber tree and resin loop
-- [x] Machine casings and base components
-- [x] Storage blocks
-- [x] Generator blocks
-- [ ] Finish remaining item textures and translations
-
-## Phase 3 — Machines
-- [x] Macerator
-- [x] Extractor
-- [x] Electric Furnace
-- [x] Compressor
-- [x] Recycler
-- [x] Metal Former
-- [x] Solid Canner
-- [ ] Refactor shared machine architecture
-- [ ] Data-drive all machine recipes
-
-## Phase 4 — EU Energy Network
-- [x] Basic EU tiers
+## Milestone 1 - First Playable Loop
 - [x] Generator produces EU
-- [x] BatBox stores EU
-- [x] MFE tier storage
-- [x] Chargepads and storage GUI charging
-- [ ] Finalize cable transport behavior
-- [ ] Finalize overvoltage, meltdowns and transformer parity
+- [x] BatBox stores and outputs EU
+- [x] Macerator consumes EU
+- [x] Dust processing works
+- [~] Extractor -> rubber -> cable early-game loop
+- [ ] Full manual verification of the survival start path
 
-## Phase 5 — Worldgen
-- [x] Tin ore values from IC2.ini
-- [x] Lead ore values from IC2.ini
-- [x] Uranium ore values from IC2.ini
+## Milestone 1.5 - Item Energy Foundation
+- [x] ElectricItemManager shared layer
+- [x] Item energy stored through Data Components
+- [~] Legacy item charge migration fallback
+- [ ] Release-grade migration verification on old saves
+
+## Milestone 2 - Core Machine Architecture
+- [x] Shared machine inventory base classes
+- [x] Shared processing-machine tick skeleton
+- [~] Core LV machines moved onto shared processing base
+- [ ] Finish architecture cleanup for all remaining machine families
+
+## Milestone 3 - Data-Driven Recipes
+- [x] Macerator recipe type and serializer
+- [x] Extractor / Compressor / Metal Former / Solid Canner recipe foundations
+- [~] Current gameplay recipes covered by JSON with legacy fallback
+- [ ] Remove most hardcoded compatibility fallbacks after parity checks
+
+## Milestone 4 - EU Network And Storage
+- [x] Basic EU tiers
+- [x] Generator / storage / machine packet flow
+- [x] BatBox / CESU / MFE / MFSU baseline
+- [~] Cable transport and transformer baseline
+- [ ] Proper cable visuals, routing parity and meltdown behavior
+
+## Milestone 4.5 - JEI / EMI Basics
+- [ ] Show machine recipes in recipe viewer
+- [ ] Show recipe categories for core processing machines
+- [ ] Basic energy-related item context
+
+## Milestone 5 - Worldgen And Materials
+- [x] Tin / lead / uranium values from IC2.ini
 - [x] Vanilla copper integration
-- [ ] Balance spawn distribution in real gameplay
+- [~] Rubber tree and ore generation available in-game
+- [ ] Final balancing pass in survival worlds
 
-## Phase 6 — Recipes And Datagen
-- [x] Basic crafting JSONs
-- [x] Basic furnace and blasting JSONs
-- [ ] Macerator custom recipe type
-- [ ] Expand machine recipe JSON coverage
-- [ ] Dedicated datagen for machine recipes
+## Milestone 5.5 - Minimal Energy Config
+- [ ] Config for basic EU rates and storage values
+- [ ] Config for enabling conservative balance adjustments
+- [ ] Config migration notes
 
-## Phase 7 — Compatibility
-- [ ] JEI or EMI integration
-- [ ] Better tag support for inputs and outputs
-- [ ] Survival progression audit
-- [ ] Save migration audit across old port builds
-
-## Phase 8 — Polish
+## Milestone 6 - Polish And Release Safety
 - [x] Basic machine sounds
-- [x] Basic machine state visuals
-- [ ] Full GUI polish
-- [ ] Full sound parity
-- [ ] Balance pass
-- [ ] In-game documentation and tooltips pass
+- [~] Menus and screens in usable state
+- [~] Localization pass in progress
+- [ ] Multiplayer verification
+- [ ] Save migration verification
+- [ ] Final GUI, assets and balance pass
