@@ -59,6 +59,16 @@ public final class IC2RecipeTypes {
             }
     );
 
+    public static final DeferredHolder<RecipeType<?>, RecipeType<RecyclerRecipe>> RECYCLING = RECIPE_TYPES.register(
+            "recycling",
+            () -> new RecipeType<>() {
+                @Override
+                public String toString() {
+                    return IC2.MODID + ":recycling";
+                }
+            }
+    );
+
     private IC2RecipeTypes() {
     }
 }

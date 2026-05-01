@@ -30,6 +30,7 @@
 ## Milestone 3 - Data-Driven Recipes
 - [x] Macerator recipe type and serializer
 - [x] Extractor / Compressor / Metal Former / Solid Canner recipe foundations
+- [~] Recycler recipe foundation with starter JSON coverage
 - [~] Current gameplay recipes covered by JSON with legacy fallback
 - [ ] Remove most hardcoded compatibility fallbacks after parity checks
 

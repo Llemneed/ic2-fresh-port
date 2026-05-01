@@ -25,6 +25,9 @@ public final class IC2RecipeSerializers {
     public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<SolidCannerRecipe>> SOLID_CANNING =
             RECIPE_SERIALIZERS.register("solid_canning", SolidCannerRecipeSerializer::new);
 
+    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<RecyclerRecipe>> RECYCLING =
+            RECIPE_SERIALIZERS.register("recycling", RecyclerRecipeSerializer::new);
+
     private IC2RecipeSerializers() {
     }
 }

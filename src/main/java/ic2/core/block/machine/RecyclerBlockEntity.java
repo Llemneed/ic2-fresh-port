@@ -9,6 +9,8 @@ import ic2.core.init.IC2Sounds;
 import ic2.core.item.upgrade.MachineUpgradeItem.UpgradeType;
 import ic2.core.menu.RecyclerMenu;
 import ic2.core.sound.MachineSoundHelper;
+import ic2.core.recipe.IC2RecipeTypes;
+import ic2.core.recipe.RecyclerRecipe;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -24,6 +26,8 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -43,6 +47,7 @@ public final class RecyclerBlockEntity extends AbstractProcessingMachineBlockEnt
     private static final int ENERGY_STORAGE_PER_UPGRADE = 10000;
     private static final int[] INPUT_TIERS = {32, 128, 512, 2048, 8192};
     private static final float BASE_SCRAP_CHANCE = 0.125F;
+    private float pendingScrapChance = BASE_SCRAP_CHANCE;
 
     private final ContainerData data = new ContainerData() {
         @Override
@@ -114,6 +119,7 @@ public final class RecyclerBlockEntity extends AbstractProcessingMachineBlockEnt
         saveInventory(tag, registries);
         tag.putInt("progress", progress);
         tag.putInt("energy", energyStored);
+        tag.putFloat("pendingScrapChance", pendingScrapChance);
     }
 
     @Override
@@ -124,6 +130,7 @@ public final class RecyclerBlockEntity extends AbstractProcessingMachineBlockEnt
         }
         progress = tag.getInt("progress");
         energyStored = tag.getInt("energy");
+        pendingScrapChance = tag.contains("pendingScrapChance") ? tag.getFloat("pendingScrapChance") : BASE_SCRAP_CHANCE;
     }
 
     public boolean hasRecipe(ItemStack input) {
@@ -136,9 +143,26 @@ public final class RecyclerBlockEntity extends AbstractProcessingMachineBlockEnt
 
     @Override
     protected ProcessingOperation getProcessingOperation(ItemStack input) {
-        if (!canRecycle(input) || !canOutput()) {
+        if (level != null) {
+            RecipeHolder<RecyclerRecipe> recipeHolder = level.getRecipeManager()
+                    .getRecipeFor(IC2RecipeTypes.RECYCLING.get(), new SingleRecipeInput(input), level)
+                    .orElse(null);
+            if (recipeHolder != null) {
+                RecyclerRecipe recipe = recipeHolder.value();
+                ItemStack result = recipe.getResultItem(level.registryAccess());
+                if (result.isEmpty() || !canOutput(result)) {
+                    return ProcessingOperation.empty();
+                }
+                pendingScrapChance = recipe.chance();
+                return new ProcessingOperation(result, 1, 0.0F);
+            }
+        }
+
+        if (!canRecycle(input) || !canOutput(new ItemStack(IC2Items.SCRAP.get()))) {
+            pendingScrapChance = BASE_SCRAP_CHANCE;
             return ProcessingOperation.empty();
         }
+        pendingScrapChance = BASE_SCRAP_CHANCE;
         return new ProcessingOperation(new ItemStack(IC2Items.SCRAP.get()), 1, 0.0F);
     }
 
@@ -146,7 +170,7 @@ public final class RecyclerBlockEntity extends AbstractProcessingMachineBlockEnt
     protected void completeProcessing(ItemStack input, ProcessingOperation operation) {
         consumeInputsForOperation(operation);
         RandomSource random = level != null ? level.random : RandomSource.create();
-        float chance = BASE_SCRAP_CHANCE + getUpgradeCount(UpgradeType.OVERCLOCKER) * 0.01F;
+        float chance = pendingScrapChance + getUpgradeCount(UpgradeType.OVERCLOCKER) * 0.01F;
         if (random.nextFloat() > chance) {
             return;
         }
@@ -196,8 +220,14 @@ public final class RecyclerBlockEntity extends AbstractProcessingMachineBlockEnt
         return true;
     }
 
-    private boolean canOutput() {
+    private boolean canOutput(ItemStack result) {
         ItemStack output = inventory.getStackInSlot(OUTPUT_SLOT);
-        return output.isEmpty() || (output.is(IC2Items.SCRAP.get()) && output.getCount() < output.getMaxStackSize());
+        if (output.isEmpty()) {
+            return true;
+        }
+        if (!ItemStack.isSameItemSameComponents(output, result)) {
+            return false;
+        }
+        return output.getCount() < output.getMaxStackSize();
     }
 }

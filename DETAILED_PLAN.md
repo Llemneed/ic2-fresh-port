@@ -103,6 +103,7 @@ Goal: stop expanding hardcoded machine recipes and move to JSON + recipe manager
 - [x] `ic2:compressing`
 - [x] `ic2:metal_forming`
 - [x] `ic2:solid_canning`
+- [~] `ic2:recycling`
 - [x] Recipe type and serializer registration
 - [x] Initial JSON coverage for current gameplay paths
 - [~] Legacy fallback retained for compatibility

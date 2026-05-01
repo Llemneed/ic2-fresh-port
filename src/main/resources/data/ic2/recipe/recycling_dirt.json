@@ -1,0 +1,12 @@
+{
+  "type": "ic2:recycling",
+  "ingredient": {
+    "item": "minecraft:dirt"
+  },
+  "result": {
+    "id": "ic2:scrap",
+    "count": 1
+  },
+  "chance": 0.125,
+  "energy": 120
+}
