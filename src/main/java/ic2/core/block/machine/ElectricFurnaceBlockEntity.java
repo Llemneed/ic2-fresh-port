@@ -7,6 +7,8 @@ import ic2.core.init.IC2Blocks;
 import ic2.core.init.IC2Sounds;
 import ic2.core.item.upgrade.MachineUpgradeItem.UpgradeType;
 import ic2.core.menu.ElectricFurnaceMenu;
+import ic2.core.recipe.ElectricSmeltingRecipe;
+import ic2.core.recipe.IC2RecipeTypes;
 import ic2.core.sound.MachineSoundHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -157,6 +159,18 @@ public final class ElectricFurnaceBlockEntity extends AbstractProcessingMachineB
 
     @Override
     protected ProcessingOperation getProcessingOperation(ItemStack input) {
+        if (level != null) {
+            RecipeHolder<ElectricSmeltingRecipe> electricRecipe = level.getRecipeManager()
+                    .getRecipeFor(IC2RecipeTypes.ELECTRIC_SMELTING.get(), new SingleRecipeInput(input), level)
+                    .orElse(null);
+            if (electricRecipe != null) {
+                ItemStack result = electricRecipe.value().getResultItem(level.registryAccess());
+                if (!result.isEmpty()) {
+                    return new ProcessingOperation(result, 1, electricRecipe.value().experience());
+                }
+            }
+        }
+
         RecipeHolder<SmeltingRecipe> recipe = getRecipe(input);
         if (recipe == null) {
             return ProcessingOperation.empty();

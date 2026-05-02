@@ -69,6 +69,16 @@ public final class IC2RecipeTypes {
             }
     );
 
+    public static final DeferredHolder<RecipeType<?>, RecipeType<ElectricSmeltingRecipe>> ELECTRIC_SMELTING = RECIPE_TYPES.register(
+            "electric_smelting",
+            () -> new RecipeType<>() {
+                @Override
+                public String toString() {
+                    return IC2.MODID + ":electric_smelting";
+                }
+            }
+    );
+
     private IC2RecipeTypes() {
     }
 }

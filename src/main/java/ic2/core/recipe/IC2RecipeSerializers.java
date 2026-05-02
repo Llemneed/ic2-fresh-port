@@ -28,6 +28,9 @@ public final class IC2RecipeSerializers {
     public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<RecyclerRecipe>> RECYCLING =
             RECIPE_SERIALIZERS.register("recycling", RecyclerRecipeSerializer::new);
 
+    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<ElectricSmeltingRecipe>> ELECTRIC_SMELTING =
+            RECIPE_SERIALIZERS.register("electric_smelting", ElectricSmeltingRecipeSerializer::new);
+
     private IC2RecipeSerializers() {
     }
 }

@@ -1,0 +1,11 @@
+{
+  "type": "ic2:electric_smelting",
+  "ingredient": {
+    "item": "ic2:copper_dust"
+  },
+  "result": {
+    "id": "minecraft:copper_ingot",
+    "count": 1
+  },
+  "experience": 0.2
+}
