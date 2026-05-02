@@ -108,6 +108,7 @@ Goal: stop expanding hardcoded machine recipes and move to JSON + recipe manager
 - [~] `ic2:electric_smelting`
 - [x] Recipe type and serializer registration
 - [x] Initial JSON coverage for current gameplay paths
+- [~] Recycler JSON coverage expanded for common early-game junk inputs
 - [~] Legacy fallback retained for compatibility
 - [ ] Expand coverage until hardcoded paths are only emergency fallback
 - [ ] Decide whether to move more special-case outputs into pure JSON data
