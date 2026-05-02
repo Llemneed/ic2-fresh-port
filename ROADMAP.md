@@ -24,6 +24,7 @@
 ## Milestone 2 - Core Machine Architecture
 - [x] Shared machine inventory base classes
 - [x] Shared processing-machine tick skeleton
+- [~] Menu container data validation across machine menus
 - [~] Core LV machines moved onto shared processing base
 - [ ] Finish architecture cleanup for all remaining machine families
 

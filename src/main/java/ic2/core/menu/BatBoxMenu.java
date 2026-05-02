@@ -36,6 +36,7 @@ public final class BatBoxMenu extends AbstractContainerMenu {
         this.playerInventory = playerInventory;
         this.blockEntity = blockEntity;
         this.data = data != null ? data : blockEntity.getData();
+        checkContainerDataCount(this.data, 2);
 
         addSlot(new SlotItemHandler(blockEntity.getInventory(), 0, 44, 20) {
             @Override

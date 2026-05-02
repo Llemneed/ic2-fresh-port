@@ -81,6 +81,7 @@ Goal: reduce copy-paste and make core machines safer to extend.
 - [x] Shared inventory save/load helpers
 - [x] Shared processing tick skeleton
 - [x] Shared upgrade handling baseline
+- [~] Menu data-sync validation across machine menus
 - [~] Core processing machines moved to shared base
 - [ ] Continue unifying non-processing families where it reduces risk
 - [ ] Add more small regression-proof helpers only where duplication remains real

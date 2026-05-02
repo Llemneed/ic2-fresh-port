@@ -40,6 +40,7 @@ public final class MaceratorMenu extends AbstractContainerMenu {
         super(IC2Menus.MACERATOR.get(), containerId);
         this.blockEntity = blockEntity;
         this.data = data != null ? data : blockEntity.getData();
+        checkContainerDataCount(this.data, 4);
 
         addSlot(new SlotItemHandler(blockEntity.getInventory(), 0, 73, 16) {
             @Override

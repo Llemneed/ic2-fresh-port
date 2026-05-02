@@ -35,6 +35,7 @@ public final class IronFurnaceMenu extends AbstractContainerMenu {
         super(IC2Menus.IRON_FURNACE.get(), containerId);
         this.blockEntity = blockEntity;
         this.data = data != null ? data : blockEntity.getData();
+        checkContainerDataCount(this.data, 4);
 
         addSlot(new SlotItemHandler(blockEntity.getInventory(), 0, 79, 16) {
             @Override

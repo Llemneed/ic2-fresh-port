@@ -171,6 +171,7 @@ public final class ElectricFurnaceBlockEntity extends AbstractProcessingMachineB
             }
         }
 
+        // TODO(milestone-3): Remove vanilla smelting fallback once electric smelting JSON coverage is complete.
         RecipeHolder<SmeltingRecipe> recipe = getRecipe(input);
         if (recipe == null) {
             return ProcessingOperation.empty();

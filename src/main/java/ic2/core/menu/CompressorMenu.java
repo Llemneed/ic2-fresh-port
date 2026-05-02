@@ -38,6 +38,7 @@ public final class CompressorMenu extends AbstractContainerMenu {
         super(IC2Menus.COMPRESSOR.get(), containerId);
         this.blockEntity = blockEntity;
         this.data = data != null ? data : blockEntity.getData();
+        checkContainerDataCount(this.data, 4);
 
         addSlot(new SlotItemHandler(blockEntity.getInventory(), 0, 55, 16) {
             @Override

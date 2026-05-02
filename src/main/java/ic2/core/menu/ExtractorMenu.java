@@ -38,6 +38,7 @@ public final class ExtractorMenu extends AbstractContainerMenu {
         super(IC2Menus.EXTRACTOR.get(), containerId);
         this.blockEntity = blockEntity;
         this.data = data != null ? data : blockEntity.getData();
+        checkContainerDataCount(this.data, 4);
 
         addSlot(new SlotItemHandler(blockEntity.getInventory(), 0, 55, 16) {
             @Override

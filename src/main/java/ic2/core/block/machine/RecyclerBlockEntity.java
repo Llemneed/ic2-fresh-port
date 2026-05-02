@@ -158,6 +158,7 @@ public final class RecyclerBlockEntity extends AbstractProcessingMachineBlockEnt
             }
         }
 
+        // TODO(milestone-3): Remove generic recycler fallback once recycling JSON coverage is broad enough.
         if (!canRecycle(input) || !canOutput(new ItemStack(IC2Items.SCRAP.get()))) {
             pendingScrapChance = BASE_SCRAP_CHANCE;
             return ProcessingOperation.empty();
